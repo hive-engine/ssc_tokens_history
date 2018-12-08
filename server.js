@@ -47,6 +47,9 @@ historyRouter.get('/', async (req, res) => {
 
 app.use('/history', historyRouter);
 
+app.set('trust proxy', true);
+app.set('trust proxy', 'loopback');
+
 app.listen(config.port);
 
 // graceful app closing
