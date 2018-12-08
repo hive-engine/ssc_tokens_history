@@ -1,0 +1,9 @@
+node_modules
+examples
+.DS_Store
+data
+test/data
+*.key
+*.cert
+blocks.log
+.env
