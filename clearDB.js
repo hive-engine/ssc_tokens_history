@@ -9,7 +9,7 @@ async function initDB() {
   const query = `
   -- Table: transactions
 
-  delete * from transactions;
+  delete from transactions;
 `;
 
   await pool.query(query);
