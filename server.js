@@ -17,7 +17,12 @@ const historyRouter = express.Router();
 historyRouter.get('/', async (req, res) => {
   try {
     const { query } = req;
-    const { account, offset, limit } = query;
+    const {
+      account,
+      offset,
+      limit,
+      type,
+    } = query;
 
     let sOffset = parseInt(offset, 10);
     if (isNaN(sOffset)) { // eslint-disable-line no-restricted-globals
@@ -33,9 +38,11 @@ historyRouter.get('/', async (req, res) => {
       sLimit = 1;
     }
 
-    const SQLQuery = 'SELECT * FROM "transactions" WHERE "from" = $1 OR "to" = $1 ORDER BY "timestamp" DESC OFFSET $2 LIMIT $3';
+    const sType = type !== 'user' || type !== 'contract' ? 'user' : type;
 
-    const { rows } = await pool.query(SQLQuery, [account, sOffset, sLimit]);
+    const SQLQuery = 'SELECT * FROM "transactions" WHERE ("from" = $1 AND "from_type" = $2) OR ("to" = $1 AND "to_type" = $2) ORDER BY "timestamp" DESC OFFSET $3 LIMIT $4';
+
+    const { rows } = await pool.query(SQLQuery, [account, sType, sOffset, sLimit]);
     return res.status(200).json(rows);
   } catch (err) {
     console.error(err); // eslint-disable-line no-console
