@@ -18,9 +18,10 @@ const TRANSFER_FROM_CONTRACT = 'transferFromContract';
 let { lastSSCBlockParsed } = config; // eslint-disable-line prefer-const
 
 async function parseBlock(block) {
-  console.log(`parsing block #${block.blockNumber}`); // eslint-disable-line no-console
+  const { transactions, timestamp, blockNumber } = block;
 
-  const { transactions, timestamp } = block;
+  console.log(`parsing block #${blockNumber}`); // eslint-disable-line no-console
+
   const nbTxs = transactions.length;
   const finalTimestamp = `${timestamp}.000Z`;
 
@@ -54,22 +55,22 @@ async function parseBlock(block) {
             } = ev.data;
 
             if (ev.event === TRANSFER) {
-              values = [transactionId, finalTimestamp, symbol, from, 'user', to, 'user', quantity];
+              values = [blockNumber, transactionId, finalTimestamp, symbol, from, 'user', to, 'user', quantity];
 
               txToSave = true;
             } else if (ev.event === TRANSFER_TO_CONTRACT) {
-              values = [transactionId, finalTimestamp, symbol, from, 'user', to, 'contract', quantity];
+              values = [blockNumber, transactionId, finalTimestamp, symbol, from, 'user', to, 'contract', quantity];
 
               txToSave = true;
             } else if (ev.event === TRANSFER_FROM_CONTRACT) {
-              values = [transactionId, finalTimestamp, symbol, from, 'contract', to, 'user', quantity];
+              values = [blockNumber, transactionId, finalTimestamp, symbol, from, 'contract', to, 'user', quantity];
 
               txToSave = true;
             }
 
             if (txToSave) {
               // add the transaction to the history
-              const query = 'INSERT INTO transactions("txid", "timestamp", "symbol", "from", "from_type", "to", "to_type", "quantity") VALUES($1, $2, $3, $4, $5, $6, $7, $8)';
+              const query = 'INSERT INTO transactions("block", "txid", "timestamp", "symbol", "from", "from_type", "to", "to_type", "quantity") VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)';
               await pool.query(query, values); // eslint-disable-line no-await-in-loop
             }
           }

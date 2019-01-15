@@ -9,8 +9,12 @@ async function initDB() {
   const query = `
   -- Table: transactions
 
-  CREATE TABLE IF NOT EXISTS transactions
+  DROP INDEX idx_transactions_timestamp;
+  DROP TABLE transactions;
+
+  CREATE TABLE transactions
   (
+      block numeric,
       txid text COLLATE pg_catalog."default" NOT NULL,
       "timestamp" timestamp without time zone NOT NULL,
       symbol text COLLATE pg_catalog."default" NOT NULL,
