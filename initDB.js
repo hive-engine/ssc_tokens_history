@@ -7,6 +7,8 @@ const pool = new Pool({
 
 async function initDB() {
   const query = `
+  SET TIME ZONE 'UTC';
+  
   -- Table: transactions
 
   DROP INDEX idx_transactions_timestamp;
