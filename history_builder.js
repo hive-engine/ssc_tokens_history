@@ -68,7 +68,7 @@ async function parseBlock(block) {
 
             if (txToSave) {
               // add the transaction to the history
-              const query = 'INSERT INTO transactions("txid", "timestamp", "symbol", "from", "from_type", "to", "to_type", "quantity") VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)';
+              const query = 'INSERT INTO transactions("txid", "timestamp", "symbol", "from", "from_type", "to", "to_type", "quantity") VALUES($1, $2, $3, $4, $5, $6, $7, $8)';
               await pool.query(query, values); // eslint-disable-line no-await-in-loop
             }
           }
