@@ -8,7 +8,7 @@ const pool = new Pool({
 async function initDB() {
   const query = `
   SET TIME ZONE 'UTC';
-  
+
   -- Table: transactions
 
   DROP INDEX idx_transactions_timestamp;
@@ -18,7 +18,7 @@ async function initDB() {
   (
       block numeric,
       txid text COLLATE pg_catalog."default" NOT NULL,
-      "timestamp" timestamp without time zone NOT NULL,
+      "timestamp" timestamp with time zone NOT NULL,
       symbol text COLLATE pg_catalog."default" NOT NULL,
       "from" text COLLATE pg_catalog."default" NOT NULL,
       "from_type" text COLLATE pg_catalog."default" NOT NULL,
