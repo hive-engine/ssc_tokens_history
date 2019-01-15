@@ -22,6 +22,7 @@ async function parseBlock(block) {
 
   const { transactions, timestamp } = block;
   const nbTxs = transactions.length;
+  const finalTimestamp = `${timestamp}.000Z`;
 
   for (let index = 0; index < nbTxs; index += 1) {
     const tx = transactions[index];
@@ -53,15 +54,15 @@ async function parseBlock(block) {
             } = ev.data;
 
             if (ev.event === TRANSFER) {
-              values = [transactionId, timestamp, symbol, from, 'user', to, 'user', quantity];
+              values = [transactionId, finalTimestamp, symbol, from, 'user', to, 'user', quantity];
 
               txToSave = true;
             } else if (ev.event === TRANSFER_TO_CONTRACT) {
-              values = [transactionId, timestamp, symbol, from, 'user', to, 'contract', quantity];
+              values = [transactionId, finalTimestamp, symbol, from, 'user', to, 'contract', quantity];
 
               txToSave = true;
             } else if (ev.event === TRANSFER_FROM_CONTRACT) {
-              values = [transactionId, timestamp, symbol, from, 'contract', to, 'user', quantity];
+              values = [transactionId, finalTimestamp, symbol, from, 'contract', to, 'user', quantity];
 
               txToSave = true;
             }
