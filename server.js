@@ -38,7 +38,7 @@ historyRouter.get('/', async (req, res) => {
       sLimit = 1;
     }
 
-    const sType = type !== 'user' || type !== 'contract' ? 'user' : type;
+    const sType = type !== 'user' && type !== 'contract' ? 'user' : type;
 
     const SQLQuery = `
       SELECT *
