@@ -40,7 +40,15 @@ historyRouter.get('/', async (req, res) => {
 
     const sType = type !== 'user' || type !== 'contract' ? 'user' : type;
 
-    const SQLQuery = 'SELECT * FROM "transactions" WHERE ("from" = $1 AND "from_type" = $2) OR ("to" = $1 AND "to_type" = $2) ORDER BY "timestamp" DESC OFFSET $3 LIMIT $4';
+    const SQLQuery = `
+      SELECT *
+      FROM "transactions"
+      WHERE 
+        ("from" = $1 AND "from_type" = $2) OR
+        ("to" = $1 AND "to_type" = $2)
+      ORDER BY "timestamp" DESC
+      OFFSET $3
+      LIMIT $4`;
 
     const { rows } = await pool.query(SQLQuery, [account, sType, sOffset, sLimit]);
     return res.status(200).json(rows);
