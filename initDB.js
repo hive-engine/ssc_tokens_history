@@ -11,8 +11,8 @@ async function initDB() {
 
   -- Table: transactions
 
-  DROP INDEX idx_transactions_timestamp;
-  DROP TABLE transactions;
+  DROP INDEX IF EXISTS idx_transactions_timestamp;
+  DROP TABLE IF EXISTS transactions;
 
   CREATE TABLE transactions
   (
