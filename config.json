@@ -1,5 +1,5 @@
 {
-    "node": "https://steemsmartcontracts.tk:5000",
-    "lastSSCBlockParsed": 22,
+    "node": "https://testaccounts.steem-engine.com:5000",
+    "lastSSCBlockParsed": 0,
     "port": 3000
 }

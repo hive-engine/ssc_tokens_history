@@ -103,7 +103,7 @@ nodeCleanup((exitCode, signal) => { // eslint-disable-line no-unused-vars
   console.log('start saving conf'); // eslint-disable-line no-console
   const conf = fs.readJSONSync('./config.json');
   conf.lastSSCBlockParsed = lastSSCBlockParsed;
-  fs.writeJSONSync('./config.json', conf);
+  fs.writeJSONSync('./config.json', conf, { spaces: 4 });
   pool.end();
   console.log('done saving conf'); // eslint-disable-line no-console
 });
