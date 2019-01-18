@@ -1,5 +1,5 @@
 {
-    "node": "https://testaccounts.steem-engine.com:5000",
+    "node": "https://testapi.steem-engine.com",
     "lastSSCBlockParsed": 0,
     "port": 3000
 }
