@@ -1,6 +1,7 @@
 require('dotenv').config();
 const { Pool } = require('pg');
 const express = require('express');
+const cors = require('cors');
 const bodyParser = require('body-parser');
 const nodeCleanup = require('node-cleanup');
 const config = require('./config');
@@ -10,6 +11,7 @@ const pool = new Pool({
 });
 
 const app = express();
+app.use(cors({ methods: ['GET'] }));
 app.use(bodyParser.json({ type: 'application/json' }));
 
 const historyRouter = express.Router();
