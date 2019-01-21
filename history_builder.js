@@ -3,9 +3,21 @@ const { Pool } = require('pg');
 const nodeCleanup = require('node-cleanup');
 const fs = require('fs-extra');
 const SSC = require('sscjs');
+const { Queue } = require('./libs/Queue');
 const config = require('./config');
 
-const ssc = new SSC(config.node);
+const sscNodes = new Queue();
+config.nodes.forEach(node => sscNodes.push(node));
+
+const getSSCNode = () => {
+  const node = sscNodes.pop();
+  sscNodes.push(node);
+
+  console.log('Using SSC node:', node); // eslint-disable-line no-console
+  return node;
+};
+
+let ssc = new SSC(getSSCNode());
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
@@ -83,16 +95,21 @@ async function parseBlock(block) {
 }
 
 async function parseSSCChain(blockNumber) {
-  const block = await ssc.getBlockInfo(blockNumber);
-  let newBlockNumber = blockNumber;
+  try {
+    const block = await ssc.getBlockInfo(blockNumber);
+    let newBlockNumber = blockNumber;
 
-  if (block !== null) {
-    newBlockNumber += 1;
-    await parseBlock(block);
+    if (block !== null) {
+      newBlockNumber += 1;
+      await parseBlock(block);
 
-    setTimeout(() => parseSSCChain(newBlockNumber), SSCChainPollingTime);
-  } else {
-    setTimeout(() => parseSSCChain(newBlockNumber), SSCChainPollingTime);
+      setTimeout(() => parseSSCChain(newBlockNumber), SSCChainPollingTime);
+    } else {
+      setTimeout(() => parseSSCChain(newBlockNumber), SSCChainPollingTime);
+    }
+  } catch (error) {
+    ssc = new SSC(getSSCNode());
+    setTimeout(() => parseSSCChain(blockNumber), SSCChainPollingTime);
   }
 }
 
