@@ -108,7 +108,7 @@ async function parseSSCChain(blockNumber) {
       setTimeout(() => parseSSCChain(newBlockNumber), SSCChainPollingTime);
     }
   } catch (error) {
-    console.log(error)
+    console.log(error);
     ssc = new SSC(getSSCNode());
     setTimeout(() => parseSSCChain(blockNumber), SSCChainPollingTime);
   }
@@ -120,7 +120,7 @@ parseSSCChain(lastSSCBlockParsed);
 nodeCleanup((exitCode, signal) => { // eslint-disable-line no-unused-vars
   console.log('start saving conf'); // eslint-disable-line no-console
   const conf = fs.readJSONSync('./config.json');
-  conf.lastSSCBlockParsed = lastSSCBlockParsed;
+  conf.lastSSCBlockParsed = lastSSCBlockParsed + 1;
   fs.writeJSONSync('./config.json', conf, { spaces: 4 });
   pool.end();
   console.log('done saving conf'); // eslint-disable-line no-console
