@@ -24,6 +24,7 @@ historyRouter.get('/', async (req, res) => {
       offset,
       limit,
       type,
+      symbol,
     } = query;
 
     let sOffset = parseInt(offset, 10);
@@ -41,6 +42,24 @@ historyRouter.get('/', async (req, res) => {
     }
 
     const sType = type !== 'user' && type !== 'contract' ? 'user' : type;
+
+    if (symbol) {
+      const SQLQuery = `
+      SELECT *
+      FROM "transactions"
+      WHERE 
+        (
+          ("from" = $1 AND "from_type" = $2) OR
+          ("to" = $1 AND "to_type" = $2)
+        ) AND
+        "symbol" = $3
+      ORDER BY "timestamp" DESC
+      OFFSET $4
+      LIMIT $5`;
+
+      const { rows } = await pool.query(SQLQuery, [account, sType, symbol, sOffset, sLimit]);
+      return res.status(200).json(rows);
+    }
 
     const SQLQuery = `
       SELECT *
