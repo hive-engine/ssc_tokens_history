@@ -108,6 +108,7 @@ async function parseSSCChain(blockNumber) {
       setTimeout(() => parseSSCChain(newBlockNumber), SSCChainPollingTime);
     }
   } catch (error) {
+    console.log(error)
     ssc = new SSC(getSSCNode());
     setTimeout(() => parseSSCChain(blockNumber), SSCChainPollingTime);
   }
