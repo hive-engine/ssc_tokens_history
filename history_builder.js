@@ -42,10 +42,12 @@ async function parseBlock(block) {
 
     const {
       transactionId,
+      payload,
       logs,
     } = tx;
 
     const logsObj = JSON.parse(logs);
+    let payloadObj = null;
 
     if (logsObj) {
       const { events } = logsObj;
@@ -81,8 +83,22 @@ async function parseBlock(block) {
             }
 
             if (txToSave) {
+              // check if there is a memo in the transfer
+              if (payloadObj === null) {
+                payloadObj = JSON.parse(payload);
+              }
+
+              const { memo } = payloadObj;
+              let query = '';
+
+              if (memo && typeof memo === 'string') {
+                values.push(memo);
+                query = 'INSERT INTO transactions("block", "txid", "timestamp", "symbol", "from", "from_type", "to", "to_type", "quantity", "memo") VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)';
+              } else {
+                query = 'INSERT INTO transactions("block", "txid", "timestamp", "symbol", "from", "from_type", "to", "to_type", "quantity") VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)';
+              }
+
               // add the transaction to the history
-              const query = 'INSERT INTO transactions("block", "txid", "timestamp", "symbol", "from", "from_type", "to", "to_type", "quantity") VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)';
               await pool.query(query, values); // eslint-disable-line no-await-in-loop
             }
           }
