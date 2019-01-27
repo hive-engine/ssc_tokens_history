@@ -16,7 +16,7 @@ async function initDB() {
 
   CREATE TABLE transactions
   (
-      "block" numeric COLLATE pg_catalog."default" NOT NULL,
+      "block" numeric,
       "txid" text COLLATE pg_catalog."default" NOT NULL,
       "timestamp" timestamp with time zone NOT NULL,
       "symbol" text COLLATE pg_catalog."default" NOT NULL,
@@ -25,7 +25,7 @@ async function initDB() {
       "to" text COLLATE pg_catalog."default" NOT NULL,
       "to_type" text COLLATE pg_catalog."default" NOT NULL,
       "memo" text COLLATE pg_catalog."default" NULL,
-      "quantity" numeric COLLATE pg_catalog."default" NOT NULL,
+      "quantity" numeric,
       CONSTRAINT transactions_pkey PRIMARY KEY (txid)
   )
   WITH (
