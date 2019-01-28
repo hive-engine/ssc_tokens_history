@@ -21,7 +21,7 @@ let ssc = new SSC(getSSCNode());
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
-const SSCChainPollingTime = 3000;
+
 const TOKENS_CONTRACT_NAME = 'tokens';
 const TRANSFER = 'transfer';
 const TRANSFER_TO_CONTRACT = 'transferToContract';
@@ -119,14 +119,14 @@ async function parseSSCChain(blockNumber) {
       newBlockNumber += 1;
       await parseBlock(block);
 
-      setTimeout(() => parseSSCChain(newBlockNumber), SSCChainPollingTime);
+      setTimeout(() => parseSSCChain(newBlockNumber), config.pollingTime);
     } else {
-      setTimeout(() => parseSSCChain(newBlockNumber), SSCChainPollingTime);
+      setTimeout(() => parseSSCChain(newBlockNumber), config.pollingTime);
     }
   } catch (error) {
     console.log(error);
     ssc = new SSC(getSSCNode());
-    setTimeout(() => parseSSCChain(blockNumber), SSCChainPollingTime);
+    setTimeout(() => parseSSCChain(blockNumber), config.pollingTime);
   }
 }
 
