@@ -57,7 +57,7 @@ async function parseBlock(block) {
         let values;
         const nbEvents = events.length;
 
-        for (let idx = 0; index < nbEvents; index += 1) {
+        for (let idx = 0; idx < nbEvents; idx += 1) {
           const ev = events[idx];
 
           if (ev.contract === TOKENS_CONTRACT_NAME) {
