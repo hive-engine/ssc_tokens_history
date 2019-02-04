@@ -59,6 +59,7 @@ async function parseBlock(block) {
 
         for (let idx = 0; idx < nbEvents; idx += 1) {
           const ev = events[idx];
+          const finalTxId = nbEvents > 1 ? `${transactionId}-${idx}` : transactionId;
 
           if (ev.contract === TOKENS_CONTRACT_NAME) {
             const {
@@ -69,15 +70,15 @@ async function parseBlock(block) {
             } = ev.data;
 
             if (ev.event === TRANSFER) {
-              values = [blockNumber, transactionId, finalTimestamp, symbol, from, 'user', to, 'user', quantity];
+              values = [blockNumber, finalTxId, finalTimestamp, symbol, from, 'user', to, 'user', quantity];
 
               txToSave = true;
             } else if (ev.event === TRANSFER_TO_CONTRACT) {
-              values = [blockNumber, transactionId, finalTimestamp, symbol, from, 'user', to, 'contract', quantity];
+              values = [blockNumber, finalTxId, finalTimestamp, symbol, from, 'user', to, 'contract', quantity];
 
               txToSave = true;
             } else if (ev.event === TRANSFER_FROM_CONTRACT) {
-              values = [blockNumber, transactionId, finalTimestamp, symbol, from, 'contract', to, 'user', quantity];
+              values = [blockNumber, finalTxId, finalTimestamp, symbol, from, 'contract', to, 'user', quantity];
 
               txToSave = true;
             }
