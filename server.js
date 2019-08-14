@@ -70,6 +70,7 @@ historyRouter.get('/', async (req, res) => {
       const result = await accountsHistoryColl.find(mongoQuery, {
         limit: sLimit,
         skip: sOffset,
+        sort: { timestamp: -1 },
       }).toArray();
 
 
