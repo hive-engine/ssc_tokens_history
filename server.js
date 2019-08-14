@@ -1,14 +1,15 @@
 require('dotenv').config();
-const { Pool } = require('pg');
+const { MongoClient } = require('mongodb');
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const nodeCleanup = require('node-cleanup');
 const config = require('./config');
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+let client = null;
+let db = null;
+let accountsHistoryColl = null;
+let marketHistoryColl = null;
 
 const app = express();
 app.use(cors({ methods: ['GET'] }));
@@ -23,8 +24,9 @@ historyRouter.get('/', async (req, res) => {
       account,
       offset,
       limit,
-      type,
       symbol,
+      timestampStart,
+      timestampEnd,
     } = query;
 
     let sOffset = parseInt(offset, 10);
@@ -41,38 +43,42 @@ historyRouter.get('/', async (req, res) => {
       sLimit = 1;
     }
 
-    const sType = type !== 'user' && type !== 'contract' ? 'user' : type;
+    if (account.length >= 3 && account.length <= 16) {
+      const mongoQuery = {
+        account,
+      };
 
-    if (symbol) {
-      const SQLQuery = `
-      SELECT *
-      FROM "transactions"
-      WHERE 
-        (
-          ("from" = $1 AND "from_type" = $2) OR
-          ("to" = $1 AND "to_type" = $2)
-        ) AND
-        "symbol" = $3
-      ORDER BY "timestamp" DESC
-      OFFSET $4
-      LIMIT $5`;
+      if (typeof symbol === 'string' && symbol.length > 0 && symbol.length <= 10) {
+        mongoQuery.symbol = symbol;
+      }
 
-      const { rows } = await pool.query(SQLQuery, [account, sType, symbol, sOffset, sLimit]);
-      return res.status(200).json(rows);
+      const sTimestampStart = parseInt(timestampStart, 10);
+      const sTimestampEnd = parseInt(timestampEnd, 10);
+
+      // eslint-disable-next-line no-restricted-globals
+      if (!isNaN(sTimestampStart) && !isNaN(sTimestampEnd)
+        && sTimestampStart <= sTimestampEnd
+        && sTimestampStart > 0 && sTimestampStart < Number.MAX_SAFE_INTEGER
+        && sTimestampEnd > 0 && sTimestampEnd < Number.MAX_SAFE_INTEGER) {
+
+        mongoQuery.timestamp = {
+          $gte: sTimestampStart,
+          $lte: sTimestampEnd,
+        };
+      }
+
+      const result = await accountsHistoryColl.find(mongoQuery, {
+        limit: sLimit,
+        skip: sOffset,
+      }).toArray();
+
+
+      return res.status(200).json(result);
     }
 
-    const SQLQuery = `
-      SELECT *
-      FROM "transactions"
-      WHERE 
-        ("from" = $1 AND "from_type" = $2) OR
-        ("to" = $1 AND "to_type" = $2)
-      ORDER BY "timestamp" DESC
-      OFFSET $3
-      LIMIT $4`;
-
-    const { rows } = await pool.query(SQLQuery, [account, sType, sOffset, sLimit]);
-    return res.status(200).json(rows);
+    return res.status(400).json({
+      errors: ['an error occured'],
+    });
   } catch (err) {
     console.error(err); // eslint-disable-line no-console
     return res.status(400).json({
@@ -81,14 +87,28 @@ historyRouter.get('/', async (req, res) => {
   }
 });
 
-app.use('/history', historyRouter);
+const init = async () => {
+  client = await MongoClient.connect(process.env.DATABASE_URL, { useNewUrlParser: true });
+  db = client.db(process.env.DATABASE_NAME);
+  db.collection('accountsHistory', { strict: true }, async (err, collection) => {
+    // collection does not exist
+    if (err) {
+      throw new Error('launch history_builder.js first');
+    } else {
+      accountsHistoryColl = collection;
+      app.use('/history', historyRouter);
 
-app.set('trust proxy', true);
-app.set('trust proxy', 'loopback');
+      app.set('trust proxy', true);
+      app.set('trust proxy', 'loopback');
 
-app.listen(config.port);
+      app.listen(config.port);
+    }
+  });
+};
+
+init();
 
 // graceful app closing
 nodeCleanup((exitCode, signal) => { // eslint-disable-line no-unused-vars
-  pool.end();
+  client.close();
 });

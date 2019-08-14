@@ -1,6 +1,8 @@
 {
-    "nodes": ["https://testapi.steem-engine.com"],
-    "lastSSCBlockParsed": 0,
+    "nodes": [
+        "https://api.steem-engine.com/rpc"
+    ],
+    "lastSSCBlockParsed": 1005225,
     "port": 3000,
-    "pollingTime": 1000
+    "pollingTime": 500
 }
