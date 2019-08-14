@@ -96,7 +96,7 @@ const init = async () => {
       throw new Error('launch history_builder.js first');
     } else {
       accountsHistoryColl = collection;
-      app.use('/history', historyRouter);
+      app.use('/accountHistory', historyRouter);
 
       app.set('trust proxy', true);
       app.set('trust proxy', 'loopback');
