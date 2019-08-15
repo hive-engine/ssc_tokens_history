@@ -44,12 +44,12 @@ historyRouter.get('/', async (req, res) => {
       sLimit = 1;
     }
 
-    if (account.length >= 3 && account.length <= 16) {
+    if (account && account.length >= 3 && account.length <= 16) {
       const mongoQuery = {
         account,
       };
 
-      if (typeof symbol === 'string' && symbol.length > 0 && symbol.length <= 10) {
+      if (symbol && typeof symbol === 'string' && symbol.length > 0 && symbol.length <= 10) {
         mongoQuery.symbol = symbol;
       }
 
@@ -96,7 +96,7 @@ marketRouter.get('/', async (req, res) => {
       timestampEnd,
     } = query;
 
-    if (typeof symbol === 'string' && symbol.length > 0 && symbol.length <= 10) {
+    if (symbol && typeof symbol === 'string' && symbol.length > 0 && symbol.length <= 10) {
       const mongoQuery = {
         symbol,
       };
