@@ -4,6 +4,7 @@ require('dotenv').config();
 const { MongoClient } = require('mongodb');
 const nodeCleanup = require('node-cleanup');
 const fs = require('fs-extra');
+const BigNumber = require('bignumber.js');
 const SSC = require('sscjs');
 const { Queue } = require('./libs/Queue');
 const config = require('./config');
@@ -38,7 +39,10 @@ async function parseBlock(block) {
   console.log(`parsing block #${blockNumber}`); // eslint-disable-line no-console
 
   const nbTxs = transactions.length;
-  const finalTimestamp = new Date(`${timestamp}.000Z`).getTime() / 1000;
+  const blockDate = new Date(`${timestamp}.000Z`);
+  const stringDate = `${blockDate.getFullYear()}-${(blockDate.getMonth() + 1).toString().padStart(2, '0')}-${(blockDate.getDate()).toString().padStart(2, '0')}`;
+  const dateTimestamp = new Date(stringDate).getTime() / 1000;
+  const finalTimestamp = blockDate.getTime() / 1000;
 
   for (let index = 0; index < nbTxs; index += 1) {
     const tx = transactions[index];
@@ -331,6 +335,43 @@ async function parseBlock(block) {
               finalTx.quantitySteem = nextEvent.data.quantity;
               await accountsHistoryColl.insertOne(finalTx);
 
+              let metric = await marketHistoryColl.findOne({ timestamp: dateTimestamp, symbol });
+              const price = BigNumber(nextEvent.data.quantity)
+                .dividedBy(event.data.quantity)
+                .toFixed(8);
+              if (metric === null) {
+                metric = {
+                  timestamp: dateTimestamp,
+                  symbol,
+                  volumeSteem: nextEvent.data.quantity,
+                  volumeToken: event.data.quantity,
+                  lowestPrice: price,
+                  highestPrice: price,
+                };
+
+                await marketHistoryColl.insertOne(metric);
+              } else {
+                metric.volumeSteem = BigNumber(metric.volumeSteem)
+                  .plus(nextEvent.data.quantity)
+                  .toFixed(8);
+
+                const dp = BigNumber(metric.volumeToken).dp();
+                const dp2 = BigNumber(event.data.quantity).dp();
+                const finalDp = dp >= dp2 ? dp : dp2;
+                metric.volumeToken = BigNumber(metric.volumeToken)
+                  .plus(event.data.quantity)
+                  .toFixed(finalDp);
+
+                metric.lowestPrice = BigNumber(metric.lowestPrice).gt(price)
+                  ? price
+                  : metric.lowestPrice;
+
+                metric.highestPrice = BigNumber(metric.highestPrice).lt(price)
+                  ? price
+                  : metric.highestPrice;
+                await marketHistoryColl.updateOne({ _id: metric._id }, { $set: metric });
+              }
+
               idx += 1;
             } else {
               // this event relates to an order being closed
@@ -430,6 +471,43 @@ async function parseBlock(block) {
               finalTx.quantityTokens = event.data.quantity;
               finalTx.quantitySteem = nextEvent.data.quantity;
               await accountsHistoryColl.insertOne(finalTx);
+
+              let metric = await marketHistoryColl.findOne({ timestamp: dateTimestamp, symbol });
+              const price = BigNumber(nextEvent.data.quantity)
+                .dividedBy(event.data.quantity)
+                .toFixed(8);
+              if (metric === null) {
+                metric = {
+                  timestamp: dateTimestamp,
+                  symbol,
+                  volumeSteem: nextEvent.data.quantity,
+                  volumeToken: event.data.quantity,
+                  lowestPrice: price,
+                  highestPrice: price,
+                };
+
+                await marketHistoryColl.insertOne(metric);
+              } else {
+                metric.volumeSteem = BigNumber(metric.volumeSteem)
+                  .plus(nextEvent.data.quantity)
+                  .toFixed(8);
+
+                const dp = BigNumber(metric.volumeToken).dp();
+                const dp2 = BigNumber(event.data.quantity).dp();
+                const finalDp = dp >= dp2 ? dp : dp2;
+                metric.volumeToken = BigNumber(metric.volumeToken)
+                  .plus(event.data.quantity)
+                  .toFixed(finalDp);
+
+                metric.lowestPrice = BigNumber(metric.lowestPrice).gt(price)
+                  ? price
+                  : metric.lowestPrice;
+
+                metric.highestPrice = BigNumber(metric.highestPrice).lt(price)
+                  ? price
+                  : metric.highestPrice;
+                await marketHistoryColl.updateOne({ _id: metric._id }, { $set: metric });
+              }
 
               idx += 1;
             } else {
@@ -536,9 +614,12 @@ const init = async () => {
       console.log('creating collections');
       accountsHistoryColl = await db.createCollection('accountsHistory');
       await accountsHistoryColl.createIndex({ account: 1, symbol: 1, timestamp: -1 });
+      await accountsHistoryColl.createIndex({ transactionId: 1 });
       marketHistoryColl = await db.createCollection('marketHistory');
+      await marketHistoryColl.createIndex({ symbol: 1, timestamp: -1 });
     } else {
       accountsHistoryColl = collection;
+      marketHistoryColl = db.collection('marketHistory');
     }
 
     parseSSCChain(lastSSCBlockParsed);

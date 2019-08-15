@@ -16,6 +16,7 @@ app.use(cors({ methods: ['GET'] }));
 app.use(bodyParser.json({ type: 'application/json' }));
 
 const historyRouter = express.Router();
+const marketRouter = express.Router();
 
 historyRouter.get('/', async (req, res) => {
   try {
@@ -60,7 +61,6 @@ historyRouter.get('/', async (req, res) => {
         && sTimestampStart <= sTimestampEnd
         && sTimestampStart > 0 && sTimestampStart < Number.MAX_SAFE_INTEGER
         && sTimestampEnd > 0 && sTimestampEnd < Number.MAX_SAFE_INTEGER) {
-
         mongoQuery.timestamp = {
           $gte: sTimestampStart,
           $lte: sTimestampEnd,
@@ -73,6 +73,52 @@ historyRouter.get('/', async (req, res) => {
         sort: { timestamp: -1 },
       }).toArray();
 
+      return res.status(200).json(result);
+    }
+
+    return res.status(400).json({
+      errors: ['an error occured'],
+    });
+  } catch (err) {
+    console.error(err); // eslint-disable-line no-console
+    return res.status(400).json({
+      errors: ['an error occured'],
+    });
+  }
+});
+
+marketRouter.get('/', async (req, res) => {
+  try {
+    const { query } = req;
+    const {
+      symbol,
+      timestampStart,
+      timestampEnd,
+    } = query;
+
+    if (typeof symbol === 'string' && symbol.length > 0 && symbol.length <= 10) {
+      const mongoQuery = {
+        symbol,
+      };
+
+      const sTimestampStart = parseInt(timestampStart, 10);
+      const sTimestampEnd = parseInt(timestampEnd, 10);
+
+      // eslint-disable-next-line no-restricted-globals
+      if (!isNaN(sTimestampStart) && !isNaN(sTimestampEnd)
+        && sTimestampStart <= sTimestampEnd
+        && sTimestampStart > 0 && sTimestampStart < Number.MAX_SAFE_INTEGER
+        && sTimestampEnd > 0 && sTimestampEnd < Number.MAX_SAFE_INTEGER) {
+        mongoQuery.timestamp = {
+          $gte: sTimestampStart,
+          $lte: sTimestampEnd,
+        };
+      }
+
+      const result = await marketHistoryColl.find(mongoQuery, {
+        limit: 500,
+        sort: { timestamp: -1 },
+      }).toArray();
 
       return res.status(200).json(result);
     }
@@ -97,7 +143,9 @@ const init = async () => {
       throw new Error('launch history_builder.js first');
     } else {
       accountsHistoryColl = collection;
+      marketHistoryColl = db.collection('marketHistory');
       app.use('/accountHistory', historyRouter);
+      app.use('/marketHistory', marketRouter);
 
       app.set('trust proxy', true);
       app.set('trust proxy', 'loopback');
