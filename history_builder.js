@@ -347,6 +347,8 @@ async function parseBlock(block) {
                   volumeToken: event.data.quantity,
                   lowestPrice: price,
                   highestPrice: price,
+                  openPrice: price,
+                  closePrice: price,
                 };
 
                 await marketHistoryColl.insertOne(metric);
@@ -369,6 +371,9 @@ async function parseBlock(block) {
                 metric.highestPrice = BigNumber(metric.highestPrice).lt(price)
                   ? price
                   : metric.highestPrice;
+
+                metric.closePrice = price;
+
                 await marketHistoryColl.updateOne({ _id: metric._id }, { $set: metric });
               }
 
@@ -484,6 +489,8 @@ async function parseBlock(block) {
                   volumeToken: event.data.quantity,
                   lowestPrice: price,
                   highestPrice: price,
+                  openPrice: price,
+                  closePrice: price,
                 };
 
                 await marketHistoryColl.insertOne(metric);
@@ -506,6 +513,9 @@ async function parseBlock(block) {
                 metric.highestPrice = BigNumber(metric.highestPrice).lt(price)
                   ? price
                   : metric.highestPrice;
+
+                metric.closePrice = price;
+
                 await marketHistoryColl.updateOne({ _id: metric._id }, { $set: metric });
               }
 
