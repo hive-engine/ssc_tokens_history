@@ -275,15 +275,16 @@ async function parseBlock(block) {
               nextEvent = events[idx + 1];
             }
 
-            // if the next event is a STEEMP transfer
+            // if the next event is a SWAP.HIVE transfer
             // then the current event is an order being filled
             // so the expired orders have been processed
-            if (nextEvent && nextEvent.data.symbol === 'STEEMP') {
+            if (nextEvent && nextEvent.data.symbol === 'SWAP.HIVE') {
               startIndex = idx;
               break;
             } else {
               finalTx.account = event.data.to;
               finalTx.operation = `${contract}_expire`;
+              finalTx.orderId = nextEvent.data.txId;
               finalTx.orderType = 'sell';
               finalTx.symbol = symbol;
               finalTx.quantityUnlocked = event.data.quantity;
@@ -306,12 +307,12 @@ async function parseBlock(block) {
             }
 
             // if the event is a symbol transfer
-            // and the next event is a STEEMP transfer
+            // and the next event is a SWAP.HIVE transfer
             // and the to is the sender
             if (event.data.to === sender
               && event.data.symbol === symbol
               && nextEvent && nextEvent.data.to !== sender
-              && nextEvent.data.symbol === 'STEEMP') {
+              && nextEvent.data.symbol === 'SWAP.HIVE') {
               // buy event
               finalTx.account = event.data.to;
               finalTx.operation = `${contract}_buy`;
@@ -378,15 +379,12 @@ async function parseBlock(block) {
               }
 
               idx += 1;
-            } else {
-              // this event relates to an order being closed
-              // not enough tokens remaining in order to fill the order
-              // remaining tokens after the order was filled
-              finalTx.account = event.data.to;
-              finalTx.operation = `${contract}_close`;
-              finalTx.orderType = event.data.symbol === symbol ? 'sell' : 'buy';
-              finalTx.symbol = symbol;
-              finalTx.quantityUnlocked = event.data.quantity;
+            } else if (event.event === 'orderClosed') {
+              // market order closed
+              finalTx.account = event.data.account;
+              finalTx.operation = `${contract}_closeOrder`;
+              finaltTx.orderID = event.data.txId;
+              finalTx.orderType = event.data.type;
               await accountsHistoryColl.insertOne(finalTx);
             }
           }
@@ -428,6 +426,7 @@ async function parseBlock(block) {
 
             finalTx.account = event.data.to;
             finalTx.operation = `${contract}_expire`;
+            finalTx.orderId = nextEvent.data.txId;
             finalTx.orderType = 'buy';
             finalTx.symbol = event.data.symbol;
             finalTx.quantityUnlocked = event.data.quantity;
@@ -448,12 +447,12 @@ async function parseBlock(block) {
             }
 
             // if the event is a symbol transfer
-            // and the next event is a STEEMP transfer
+            // and the next event is a SWAP.HIVE transfer
             // and the next event to is the sender
             if (event.data.to !== sender
               && event.data.symbol === symbol
               && nextEvent && nextEvent.data.to === sender
-              && nextEvent.data.symbol === 'STEEMP') {
+              && nextEvent.data.symbol === 'SWAP.HIVE') {
               // buy event
               finalTx.account = event.data.to;
               finalTx.operation = `${contract}_buy`;
@@ -520,15 +519,12 @@ async function parseBlock(block) {
               }
 
               idx += 1;
-            } else {
-              // this event relates to an order being closed
-              // not enough tokens remaining in order to fill the order
-              // remaining tokens after the order was filled
-              finalTx.account = event.data.to;
-              finalTx.operation = `${contract}_close`;
-              finalTx.orderType = event.data.symbol === symbol ? 'sell' : 'buy';
-              finalTx.symbol = symbol;
-              finalTx.quantityUnlocked = event.data.quantity;
+            } else if (event.event === 'orderClosed') {
+              // market order closed
+              finalTx.account = event.data.account;
+              finalTx.operation = `${contract}_closeOrder`;
+              finaltTx.orderID = event.data.txId;
+              finalTx.orderType = event.data.type;
               await accountsHistoryColl.insertOne(finalTx);
             }
           }
@@ -590,6 +586,23 @@ async function parseBlock(block) {
         await accountsHistoryColl.insertOne(finalTx);
       }
     }
+    /*else if (contract === 'nft') {
+      if (errors === undefined
+        && action === 'checkPendingUndelegations'
+        && events && events.length > 0) {
+        const {
+          symbol,
+          ids,
+        } = events[0].data;
+
+        finalTx.account = account;
+        finalTx.operation = `${contract}_undelegateDone`;
+        finalTx.symbol = symbol;
+        finalTx.ids = ids;
+
+        await accountsHistoryColl.insertOne(finalTx);
+      }
+    }*/
   }
 
   lastSSCBlockParsed = block.blockNumber;
