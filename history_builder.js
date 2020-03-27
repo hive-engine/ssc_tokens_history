@@ -66,7 +66,7 @@ async function parseBlock(block) {
     const payloadObj = JSON.parse(payload);
     const { events, errors } = logsObj;
 
-    if (contract === 'tokens') {
+    if (contract === 'tokens' || contract === 'hivepegged') {
       const transerOperations = ['transfer', 'issue', 'transferToContract', 'transferFromContract'];
       if (errors === undefined
         && transerOperations.includes(action)
