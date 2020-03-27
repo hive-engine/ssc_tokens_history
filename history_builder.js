@@ -383,7 +383,7 @@ async function parseBlock(block) {
               // market order closed
               finalTx.account = event.data.account;
               finalTx.operation = `${contract}_closeOrder`;
-              finaltTx.orderID = event.data.txId;
+              finalTx.orderID = event.data.txId;
               finalTx.orderType = event.data.type;
               await accountsHistoryColl.insertOne(finalTx);
             }
@@ -523,7 +523,7 @@ async function parseBlock(block) {
               // market order closed
               finalTx.account = event.data.account;
               finalTx.operation = `${contract}_closeOrder`;
-              finaltTx.orderID = event.data.txId;
+              finalTx.orderID = event.data.txId;
               finalTx.orderType = event.data.type;
               await accountsHistoryColl.insertOne(finalTx);
             }
