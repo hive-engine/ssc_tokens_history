@@ -67,7 +67,7 @@ async function parseBlock(block) {
     const { events, errors } = logsObj;
 
     if (contract === 'tokens' || contract === 'hivepegged') {
-      const transerOperations = ['transfer', 'issue', 'transferToContract', 'transferFromContract'];
+      const transerOperations = ['transfer', 'issue', 'transferToContract', 'transferFromContract', 'buy', 'withdraw'];
       if (errors === undefined
         && transerOperations.includes(action)
         && events && events.length > 0) {
