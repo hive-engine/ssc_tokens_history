@@ -1,10 +1,12 @@
-# Steem Smart Contracts tokens history
+# Hive Smart Contracts history
 
-This new version is available at https://history.steem-engine.com/accountHistory
+This new version is available at https://accounts.hive-engine.com/
+
+### Tokens History:
 
 The parameters available are:
-account: a STEEM account (required)
-symbol: a Steem-Engine token symbol (optional)
+account: a HIVE account (required)
+symbol: a Hive-Engine token symbol (optional)
 timestampStart: a unix timestamp that represents the start of the dataset (optional)
 timestampEnd: a unix timestamp that represents the end of the dataset (optional)
 limit: number of records for the dataset (max is 500) (optional)
@@ -12,10 +14,10 @@ offset: offset for the dataset (required to browse a dataset that is bigger than
 
 Examples:
 
-https://history.steem-engine.com/accountHistory?account=steemsc
-https://history.steem-engine.com/accountHistory?account=steemsc&symbol=ENG
-https://history.steem-engine.com/accountHistory?account=steemsc&symbol=ENG&timestampStart=1554085536&timestampEnd=1564748055
-https://history.steem-engine.com/accountHistory?account=steemsc&symbol=ENG&timestampStart=1554085536&timestampEnd=1564748055&limit=1&offset=1
+https://accounts.hive-engine.com/accountHistory?account=hive-eng
+https://accounts.hive-engine.com/accountHistory?account=hive-eng&symbol=BEE
+https://accounts.hive-engine.com/accountHistory?account=hive-eng&symbol=BEE&timestampStart=1554085536&timestampEnd=1564748055
+https://accounts.hive-engine.com/accountHistory?account=hive-eng&symbol=BEE&timestampStart=1554085536&timestampEnd=1564748055&limit=1&offset=1
 
 The different operations available in the history:
 
@@ -71,3 +73,24 @@ market_buy: tokens were bought
 market_sell: tokens were sold
 
 market_close: an order was closed
+
+### Market History:
+
+The parameters available are:
+
+symbol: a Steem-Engine token symbol (required)
+
+timestampStart: a unix timestamp that represents the start of the dataset (optional)
+
+timestampEnd: a unix timestamp that represents the end of the dataset (optional)
+
+Data available:
+volumeSteem: volume of HIVE (SWAP.HIVE) traded
+volumeToken: volume of tokens traded
+lowestPrice: lowest price seen that day
+highestPrice: highest price seen that day
+
+Examples:
+
+https://accounts.hive-engine.com/marketHistory?symbol=BEE
+https://accounts.hive-engine.com/marketHistory?symbol=BEE&timestampStart=1554163200&timestampEnd=1554422400
