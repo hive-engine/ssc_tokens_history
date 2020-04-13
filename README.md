@@ -86,11 +86,15 @@ timestampEnd: a unix timestamp that represents the end of the dataset (optional)
 
 Data available:
 volumeSteem: volume of HIVE (SWAP.HIVE) traded
+
 volumeToken: volume of tokens traded
+
 lowestPrice: lowest price seen that day
+
 highestPrice: highest price seen that day
 
 Examples:
 
 https://accounts.hive-engine.com/marketHistory?symbol=BEE
+
 https://accounts.hive-engine.com/marketHistory?symbol=BEE&timestampStart=1554163200&timestampEnd=1554422400
