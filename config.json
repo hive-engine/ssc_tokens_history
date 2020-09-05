@@ -1,8 +1,8 @@
 {
     "nodes": [
-        "https://api.steem-engine.com/rpc"
+        "https://api.hive-engine.com/rpc"
     ],
     "lastSSCBlockParsed": 0,
     "port": 3000,
-    "pollingTime": 500
+    "pollingTime": 1000
 }

@@ -281,7 +281,9 @@ async function parseBlock(block) {
             if (nextEvent && nextEvent.data.symbol === 'SWAP.HIVE') {
               startIndex = idx;
               break;
-            } else {
+            }
+
+            if (nextEvent && nextEvent.event === 'orderExpired') {
               finalTx.account = event.data.to;
               finalTx.operation = `${contract}_expire`;
               finalTx.orderId = nextEvent.data.txId;
@@ -418,19 +420,25 @@ async function parseBlock(block) {
               timestamp: finalTimestamp,
             };
             const event = events[idx];
+            let nextEvent = null;
+            if (idx + 1 < nbEvents) {
+              nextEvent = events[idx + 1];
+            }
 
             if (event.data.symbol === symbol) {
               startIndex = idx;
               break;
             }
 
-            finalTx.account = event.data.to;
-            finalTx.operation = `${contract}_expire`;
-            finalTx.orderId = nextEvent.data.txId;
-            finalTx.orderType = 'buy';
-            finalTx.symbol = event.data.symbol;
-            finalTx.quantityUnlocked = event.data.quantity;
-            await accountsHistoryColl.insertOne(finalTx);
+            if (nextEvent && nextEvent.event === 'orderExpired') {
+              finalTx.account = event.data.to;
+              finalTx.operation = `${contract}_expire`;
+              finalTx.orderId = nextEvent.data.txId;
+              finalTx.orderType = 'buy';
+              finalTx.symbol = event.data.symbol;
+              finalTx.quantityUnlocked = event.data.quantity;
+              await accountsHistoryColl.insertOne(finalTx);
+            }
           }
 
           // the following events are related to the order being filled
