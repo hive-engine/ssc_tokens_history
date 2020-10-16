@@ -74,6 +74,11 @@ market_sell: tokens were sold
 
 market_close: an order was closed
 
+
+Mining contract:
+
+mining_lottery: lottery was won
+
 ### Market History:
 
 The parameters available are:
