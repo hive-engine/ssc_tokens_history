@@ -242,7 +242,7 @@ async function parseBlock(block) {
 
         // TODO: get the initial tx and get the price set or this order to update market metrics
       } else if (errors === undefined
-        && action === 'buy'
+        && (action === 'buy' || action === 'marketBuy')
         && events && events.length > 0) {
         // the first event holds the data regarding the order that has been placed
         const nbEvents = events.length;
@@ -253,7 +253,7 @@ async function parseBlock(block) {
         const symbol = payloadObj.symbol;
         finalTx.account = sender;
         finalTx.operation = `${contract}_placeOrder`;
-        finalTx.orderType = 'buy';
+        finalTx.orderType = action;
         finalTx.price = payloadObj.price;
         finalTx.symbol = symbol;
         finalTx.quantityLocked = quantity;
@@ -392,7 +392,7 @@ async function parseBlock(block) {
           }
         }
       } else if (errors === undefined
-        && action === 'sell'
+        && (action === 'sell' || action === 'marketSell')
         && events && events.length > 0) {
         // the first event holds the data regarding the order that has been placed
         const nbEvents = events.length;
@@ -403,7 +403,7 @@ async function parseBlock(block) {
         const symbol = payloadObj.symbol;
         finalTx.account = sender;
         finalTx.operation = `${contract}_placeOrder`;
-        finalTx.orderType = 'sell';
+        finalTx.orderType = action;
         finalTx.price = payloadObj.price;
         finalTx.symbol = symbol;
         finalTx.quantityLocked = quantity;
