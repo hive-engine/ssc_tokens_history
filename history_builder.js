@@ -596,7 +596,7 @@ async function parseBlock(block) {
     } else if (contract === 'mining') {
         if (errors === undefined
             && action == 'checkPendingLotteries'
-            && events && events.length > 0) {
+            && events && events.length > 1) {
             const {
                 poolId,
                 winners,
