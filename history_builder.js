@@ -594,28 +594,28 @@ async function parseBlock(block) {
         await accountsHistoryColl.insertOne(finalTx);
       }
     } else if (contract === 'mining') {
-        if (errors === undefined
-            && action == 'checkPendingLotteries'
+      if (errors === undefined
+            && action === 'checkPendingLotteries'
             && events && events.length > 1) {
-            const {
-                poolId,
-                winners,
-            } = events[0].data;
-            const {
-                symbol,
-            } = events[1].data;
-            for (let i = 0; i < winners.length; i++) {
-                finalTx.poolId = poolId;
-                finalTx.account = winners[i].winner;
-                finalTx.symbol = symbol;
-                finalTx.quantity = winners[i].winningAmount;
-                finalTx.operation = 'mining_lottery';
-                finalTx._id = null;
-                await accountsHistoryColl.insertOne(finalTx);
-            }
+        const {
+          poolId,
+          winners,
+        } = events[0].data;
+        const {
+          symbol,
+        } = events[1].data;
+        for (let i = 0; i < winners.length; i += 1) {
+          finalTx.poolId = poolId;
+          finalTx.account = winners[i].winner;
+          finalTx.symbol = symbol;
+          finalTx.quantity = winners[i].winningAmount;
+          finalTx.operation = 'mining_lottery';
+          finalTx._id = null;
+          await accountsHistoryColl.insertOne(finalTx);
         }
+      }
     }
-    /*else if (contract === 'nft') {
+    /* else if (contract === 'nft') {
       if (errors === undefined
         && action === 'checkPendingUndelegations'
         && events && events.length > 0) {
@@ -631,7 +631,7 @@ async function parseBlock(block) {
 
         await accountsHistoryColl.insertOne(finalTx);
       }
-    }*/
+    } */
   }
 
   lastSSCBlockParsed = block.blockNumber;
