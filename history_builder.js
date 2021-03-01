@@ -640,15 +640,13 @@ async function parseBlock(block) {
 async function parseSSCChain(blockNumber) {
   try {
     const block = await ssc.getBlockInfo(blockNumber);
-    let newBlockNumber = blockNumber;
 
     if (block !== null) {
-      newBlockNumber += 1;
       await parseBlock(block);
 
-      setTimeout(() => parseSSCChain(newBlockNumber), config.pollingTime);
+      parseSSCChain(blockNumber + 1);
     } else {
-      setTimeout(() => parseSSCChain(newBlockNumber), config.pollingTime);
+      setTimeout(() => parseSSCChain(blockNumber), config.pollingTime);
     }
   } catch (error) {
     console.log(error);
