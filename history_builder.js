@@ -66,36 +66,41 @@ async function parseBlock(block) {
     const payloadObj = JSON.parse(payload);
     const { events, errors } = logsObj;
 
-    if (contract === 'tokens' || contract === 'hivepegged') {
-      const transerOperations = ['transfer', 'issue', 'transferToContract', 'transferFromContract', 'buy', 'withdraw'];
+    if (contract === 'tokens' || contract === 'hivepegged' || contract === 'witnesses') {
+      const transerOperations = ['transfer', 'issue', 'transferToContract', 'transferFromContract', 'buy', 'withdraw', 'proposeRound'];
       if (errors === undefined
         && transerOperations.includes(action)
         && events && events.length > 0) {
-        const {
-          from,
-          to,
-          symbol,
-          quantity,
-        } = events[0].data;
+        const nbEvents = events.length;
+        for (let idx = 0; idx < nbEvents; idx += 1) {
+          const {
+            from,
+            to,
+            symbol,
+            quantity,
+          } = events[idx].data;
 
-        const finalFrom = action === 'issue' || action === 'transferFromContract' ? `contract_${from}` : from;
-        const finalTo = action === 'transferToContract' ? `contract_${to}` : to;
-        finalTx.account = finalFrom;
-        finalTx.operation = `${contract}_${action}`;
-        finalTx.from = finalFrom;
-        finalTx.to = finalTo;
-        finalTx.symbol = symbol;
-        finalTx.quantity = quantity;
-        finalTx.memo = null;
-        const { memo } = payloadObj;
-        if (memo && typeof memo === 'string') {
-          finalTx.memo = memo;
+          const finalFrom = action === 'issue' || action === 'transferFromContract' ? `contract_${from}` : from;
+          const finalTo = action === 'transferToContract' ? `contract_${to}` : to;
+          finalTx.account = finalFrom;
+          finalTx.operation = `${contract}_${action}`;
+          finalTx.from = finalFrom;
+          finalTx.to = finalTo;
+          finalTx.symbol = symbol;
+          finalTx.quantity = quantity;
+          finalTx.memo = null;
+          const { memo } = payloadObj;
+          if (memo && typeof memo === 'string') {
+            finalTx.memo = memo;
+          }
+
+          await accountsHistoryColl.insertOne(finalTx);
+          finalTx._id = null;
+          finalTx.account = finalTo;
+
+          await accountsHistoryColl.insertOne(finalTx);
+          finalTx._id = null;
         }
-
-        await accountsHistoryColl.insertOne(finalTx);
-        finalTx._id = null;
-        finalTx.account = finalTo;
-        await accountsHistoryColl.insertOne(finalTx);
       } else if (errors === undefined && action === 'updatePrecision') {
         finalTx.account = sender;
         finalTx.operation = `${contract}_${action}`;
