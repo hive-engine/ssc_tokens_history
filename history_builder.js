@@ -80,7 +80,7 @@ async function parseBlock(block) {
             quantity,
           } = events[idx].data;
 
-          const finalFrom = action === 'issue' || action === 'transferFromContract' ? `contract_${from}` : from;
+          const finalFrom = action === 'issue' || action === 'transferFromContract' || action === 'proposeRound' ? `contract_${from}` : from;
           const finalTo = action === 'transferToContract' ? `contract_${to}` : to;
           finalTx.account = finalFrom;
           finalTx.operation = `${contract}_${action}`;
