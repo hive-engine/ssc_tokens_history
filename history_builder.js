@@ -543,6 +543,251 @@ async function parseBlock(block) {
           }
         }
       }
+    } else if (contract === 'nft') {
+      const issueActions = ['issue', 'issueMultiple'];
+      const transferActions = ['transfer', 'delegate'];
+      if (errors === undefined
+        && issueActions.includes(action)
+        && events && events.length > 0) {
+        const nbEvents = events.length;
+        for (let idx = 0; idx < nbEvents; idx += 1) {
+          finalTx = {
+            blockNumber,
+            transactionId,
+            timestamp: finalTimestamp,
+          };
+
+          const nextEvent = events[idx];
+          if (nextEvent.contract === 'tokens' && (nextEvent.event === 'transfer' || nextEvent.event === 'transferToContract')) {
+            const {
+              from,
+              to,
+              symbol,
+              quantity,
+            } = nextEvent.data;
+
+            const finalTo = nextEvent.event === 'transferToContract' ? `contract_${to}` : to;
+
+            finalTx.account = from;
+            finalTx.operation = `${contract}_${action}`;
+            finalTx.from = from;
+            finalTx.to = finalTo;
+            finalTx.symbol = symbol;
+            finalTx.quantity = quantity;
+            finalTx.memo = null;
+            const { memo } = payloadObj;
+            if (memo && typeof memo === 'string') {
+              finalTx.memo = memo;
+            }
+
+            await accountsHistoryColl.insertOne(finalTx);
+            finalTx._id = null;
+            finalTx.account = finalTo;
+
+            await accountsHistoryColl.insertOne(finalTx);
+            finalTx._id = null;
+          } else if (nextEvent.contract === 'nft' && nextEvent.event === 'issue') {
+            const {
+              from,
+              fromType,
+              to,
+              toType,
+              symbol,
+              lockedTokens,
+              lockedNfts,
+              properties,
+              id,
+            } = nextEvent.data;
+
+            const finalFrom = fromType === 'user' ? from : `contract_${from}`;
+            const finalTo = toType === 'user' ? to : `contract_${to}`;
+
+            finalTx.account = finalFrom;
+            finalTx.operation = `${contract}_${action}`;
+            finalTx.from = finalFrom;
+            finalTx.to = finalTo;
+            finalTx.symbol = symbol;
+            finalTx.lockedTokens = lockedTokens;
+            finalTx.lockedNfts = lockedNfts;
+            finalTx.properties = properties;
+            finalTx.id = id;
+            finalTx.memo = null;
+            const { memo } = payloadObj;
+            if (memo && typeof memo === 'string') {
+              finalTx.memo = memo;
+            }
+
+            await accountsHistoryColl.insertOne(finalTx);
+            finalTx._id = null;
+            finalTx.account = finalTo;
+
+            await accountsHistoryColl.insertOne(finalTx);
+            finalTx._id = null;
+          } else {
+            console.log(`Unknown event: ${nextEvent}`);
+          }
+        }
+      } else if (errors === undefined
+        && transferActions.includes(action)
+        && events && events.length > 0) {
+        const nbEvents = events.length;
+        for (let idx = 0; idx < nbEvents; idx += 1) {
+          finalTx = {
+            blockNumber,
+            transactionId,
+            timestamp: finalTimestamp,
+          };
+
+          const nextEvent = events[idx];
+          if (nextEvent.contract === 'nft' && (nextEvent.event === 'transfer' || nextEvent.event === 'delegate')) {
+            const {
+              from,
+              fromType,
+              to,
+              toType,
+              symbol,
+              id,
+            } = nextEvent.data;
+
+            const finalFrom = fromType === 'u' ? from : `contract_${from}`;
+            const finalTo = toType === 'u' ? to : `contract_${to}`;
+
+            finalTx.account = finalFrom;
+            finalTx.operation = `${contract}_${action}`;
+            finalTx.from = finalFrom;
+            finalTx.to = finalTo;
+            finalTx.symbol = symbol;
+            finalTx.id = id;
+            finalTx.memo = null;
+            const { memo } = payloadObj;
+            if (memo && typeof memo === 'string') {
+              finalTx.memo = memo;
+            }
+
+            await accountsHistoryColl.insertOne(finalTx);
+            finalTx._id = null;
+            finalTx.account = finalTo;
+
+            await accountsHistoryColl.insertOne(finalTx);
+            finalTx._id = null;
+          } else {
+            console.log(`Unknown event: ${nextEvent}`);
+          }
+        }
+      } else if (errors === undefined
+        && action === 'burn'
+        && events && events.length > 0) {
+        const nbEvents = events.length;
+        for (let idx = 0; idx < nbEvents; idx += 1) {
+          finalTx = {
+            blockNumber,
+            transactionId,
+            timestamp: finalTimestamp,
+          };
+
+          const nextEvent = events[idx];
+          if (nextEvent.contract === 'tokens' && nextEvent.event === 'transferFromContract') {
+            const {
+              from,
+              to,
+              symbol,
+              quantity,
+            } = nextEvent.data;
+
+            const finalFrom = nextEvent.event === 'transferFromContract' ? `contract_${from}` : from;
+
+            finalTx.account = finalFrom;
+            finalTx.operation = `${contract}_${action}`;
+            finalTx.from = finalFrom;
+            finalTx.to = to;
+            finalTx.symbol = symbol;
+            finalTx.quantity = quantity;
+            finalTx.memo = null;
+            const { memo } = payloadObj;
+            if (memo && typeof memo === 'string') {
+              finalTx.memo = memo;
+            }
+
+            await accountsHistoryColl.insertOne(finalTx);
+            finalTx._id = null;
+            finalTx.account = to;
+
+            await accountsHistoryColl.insertOne(finalTx);
+            finalTx._id = null;
+          } else if (nextEvent.contract === 'nft' && nextEvent.event === 'burn') {
+            const {
+              account,
+              ownedBy,
+              unlockedTokens,
+              unlockedNfts,
+              symbol,
+              id,
+            } = nextEvent.data;
+
+            const finalFrom = ownedBy === 'u' ? account : `contract_${account}`;
+            const finalTo = 'null';
+
+            finalTx.account = finalFrom;
+            finalTx.operation = `${contract}_${action}`;
+            finalTx.from = finalFrom;
+            finalTx.to = finalTo;
+            finalTx.symbol = symbol;
+            finalTx.unlockedTokens = unlockedTokens;
+            finalTx.unlockedNfts = unlockedNfts;
+            finalTx.id = id;
+            finalTx.memo = null;
+            const { memo } = payloadObj;
+            if (memo && typeof memo === 'string') {
+              finalTx.memo = memo;
+            }
+
+            await accountsHistoryColl.insertOne(finalTx);
+            finalTx._id = null;
+            finalTx.account = finalTo;
+
+            await accountsHistoryColl.insertOne(finalTx);
+            finalTx._id = null;
+          } else if (nextEvent.contract === 'nft' && nextEvent.event === 'transfer') {
+            const {
+              from,
+              fromType,
+              to,
+              toType,
+              symbol,
+              id,
+            } = nextEvent.data;
+
+            const finalFrom = fromType === 'u' ? from : `contract_${from}`;
+            const finalTo = toType === 'u' ? to : `contract_${to}`;
+
+            finalTx.account = finalFrom;
+            finalTx.operation = `${contract}_${action}`;
+            finalTx.from = finalFrom;
+            finalTx.to = finalTo;
+            finalTx.symbol = symbol;
+            finalTx.id = id;
+            finalTx.memo = null;
+            const { memo } = payloadObj;
+            if (memo && typeof memo === 'string') {
+              finalTx.memo = memo;
+            }
+
+            await accountsHistoryColl.insertOne(finalTx);
+            finalTx._id = null;
+            finalTx.account = finalTo;
+
+            await accountsHistoryColl.insertOne(finalTx);
+            finalTx._id = null;
+          }
+        }
+      } else if (errors === undefined
+        && action === 'setProperties') {
+        finalTx.account = sender;
+        finalTx.operation = `${contract}_${action}`;
+        finalTx.symbol = payloadObj.symbol;
+        finalTx.nfts = payloadObj.nfts;
+        await accountsHistoryColl.insertOne(finalTx);
+      }
     }
   }
 
