@@ -38,6 +38,7 @@ const Contracts = {
   HIVE_PEGGED: 'hivepegged',
   MINING: 'mining',
   BOT_CONTROLLER: 'botcontroller',
+  INFLATION: 'inflation',
 };
 
 const TokensContract = {
@@ -57,6 +58,8 @@ const TokensContract = {
   ENABLE_DELEGATION: 'enableDelegation',
   DELEGATE: 'delegate',
   UNDELEGATE: 'undelegate',
+  CHECK_PENDING_UNSTAKES: 'checkPendingUnstakes',
+  CHECK_PENDING_UNDELEGATIONS: 'checkPendingUndelegations',
 };
 
 const WitnessesContract = {
@@ -64,6 +67,7 @@ const WitnessesContract = {
   REGISTER: 'register',
   APPROVE: 'approve',
   DISAPPROVE: 'disapprove',
+  SCHEDULE_WITNESSES: 'scheduleWitnesses',
 };
 
 const HivePeggedContract = {
@@ -86,6 +90,20 @@ const NftContract = {
   UPDATE_NAME: 'updateName',
   UPDATE_ORG_NAME: 'updateOrgName',
   UPDATE_PRODUCT_NAME: 'updateProductName',
+};
+
+const MarketContract = {
+  CANCEL: 'cancel',
+  BUY: 'buy',
+  MARKET_BUY: 'marketBuy',
+  SELL: 'sell',
+  MARKET_SELL: 'marketSell',
+  ORDER_CLOSED: 'orderClosed',
+  ORDER_EXPIRED: 'orderExpired',
+};
+
+const MiningContract = {
+  CHECK_PENDING_LOTTERIES: 'checkPendingLotteries',
 };
 
 async function insertHistoryForAccounts(tx, accounts) {
@@ -141,7 +159,7 @@ async function parseTransferOperations(tx, events, payloadObj) {
 
 async function parseStakeDelegateOperations(sender, contract, action, tx, events, payloadObj) {
   const insertTx = tx;
-  const accounts = [sender];
+  let accounts = [sender];
   if (events && events.length > 0) {
     const logEvent = events[0].data;
     insertTx.symbol = logEvent.symbol;
@@ -170,8 +188,18 @@ async function parseStakeDelegateOperations(sender, contract, action, tx, events
         insertTx.quantity = logEvent.quantity;
         accounts.push(logEvent.from);
         break;
-      default:
+      case TokensContract.CHECK_PENDING_UNSTAKES:
+        accounts = [logEvent.account];
+        insertTx.operation = `${contract}_unstake`;
+        insertTx.quantity = logEvent.quantity;
         break;
+      case TokensContract.CHECK_PENDING_UNDELEGATIONS:
+        accounts = [logEvent.account];
+        insertTx.operation = `${contract}_undelegateDone`;
+        insertTx.quantity = logEvent.quantity;
+        break;
+      default:
+        return;
     }
   }
   await insertHistoryForAccounts(insertTx, accounts);
@@ -213,7 +241,7 @@ async function parsePayloadTokensOperation(sender, contract, action, tx, payload
       insertTx.undelegationCooldown = payloadObj.undelegationCooldown;
       break;
     default:
-      break;
+      return;
   }
 
   await insertHistoryForAccounts(insertTx, [sender]);
@@ -241,6 +269,8 @@ async function parseTokensContract(sender, contract, action, tx, events, payload
     case TokensContract.CANCEL_UNSTAKE:
     case TokensContract.DELEGATE:
     case TokensContract.UNDELEGATE:
+    case TokensContract.CHECK_PENDING_UNDELEGATIONS:
+    case TokensContract.CHECK_PENDING_UNSTAKES:
       await parseStakeDelegateOperations(sender, contract, action, tx, events, payloadObj);
       break;
     default:
@@ -256,6 +286,7 @@ async function parseWitnessesContract(action, tx, events, payloadObj) {
     case WitnessesContract.REGISTER:
     case WitnessesContract.APPROVE:
     case WitnessesContract.DISAPPROVE:
+    case WitnessesContract.SCHEDULE_WITNESSES:
       // TODO implement actions
       break;
     default:
@@ -305,9 +336,11 @@ async function parseTransferNftOperation(tx, logEvent, payloadObj) {
 }
 
 async function parseTransferNftOperations(tx, events, payloadObj) {
-  const insertTx = tx;
   if (events) {
     for (let idx = 0; idx < events.length; idx += 1) {
+      const insertTx = {
+        ...tx,
+      };
       const logEvent = events[idx];
       if (logEvent.contract === Contracts.NFT) {
         if (logEvent.event === NftContract.ISSUE) {
@@ -364,7 +397,7 @@ async function parsePayloadNftOperation(sender, contract, action, tx, payloadObj
       insertTx.productName = payloadObj.productName;
       break;
     default:
-      break;
+      return;
   }
 
   await insertHistoryForAccounts(insertTx, [sender]);
@@ -374,27 +407,201 @@ async function parseNftContract(sender, contract, action, tx, events, payloadObj
   switch (action) {
     case NftContract.TRANSFER:
     case NftContract.DELEGATE:
-      await parseTransferNftOperations(tx, events, payloadObj);
-      break;
     case NftContract.ISSUE:
     case NftContract.ISSUE_MULTIPLE:
-      await parseTransferOperations(tx, events, payloadObj);
-      await parseTransferNftOperations(tx, events, payloadObj);
-      break;
     case NftContract.BURN:
       await parseTransferOperations(tx, events, payloadObj);
       await parseTransferNftOperations(tx, events, payloadObj);
       break;
     case NftContract.SET_PROPERTIES:
-      await parsePayloadNftOperation(sender, contract, action, tx, payloadObj);
-      break;
     case NftContract.CREATE:
     case NftContract.ADD_PROPERTY:
+    case NftContract.UPDATE_URL:
+    case NftContract.UPDATE_METADATA:
+    case NftContract.UPDATE_NAME:
+    case NftContract.UPDATE_ORG_NAME:
+    case NftContract.UPDATE_PRODUCT_NAME:
       await parseTransferOperations(tx, events, payloadObj);
       await parsePayloadNftOperation(sender, contract, action, tx, payloadObj);
       break;
     default:
       console.log(`Action ${action} is not implemented for 'nft' contract yet.`);
+  }
+
+  // TODO virtual tx for nft contract
+  // if (contract === 'nft') {
+  //   if (errors === undefined
+  //     && action === 'checkPendingUndelegations'
+  //     && events && events.length > 0) {
+  //     const {
+  //       symbol,
+  //       ids,
+  //     } = events[0].data;
+  //
+  //     finalTx.account = account;
+  //     finalTx.operation = `${contract}_undelegateDone`;
+  //     finalTx.symbol = symbol;
+  //     finalTx.ids = ids;
+  //
+  //     await accountsHistoryColl.insertOne(finalTx);
+  //   }
+  // }
+}
+
+async function insertMarketHistory(dateTimestamp, symbol, event, nextEvent) {
+  let metric = await marketHistoryColl.findOne({ timestamp: dateTimestamp, symbol });
+  const price = BigNumber(nextEvent.data.quantity)
+    .dividedBy(event.data.quantity)
+    .toFixed(8);
+  if (metric === null) {
+    metric = {
+      timestamp: dateTimestamp,
+      symbol,
+      volumeSteem: nextEvent.data.quantity,
+      volumeToken: event.data.quantity,
+      lowestPrice: price,
+      highestPrice: price,
+      openPrice: price,
+      closePrice: price,
+    };
+
+    await marketHistoryColl.insertOne(metric);
+  } else {
+    metric.volumeSteem = BigNumber(metric.volumeSteem)
+      .plus(nextEvent.data.quantity)
+      .toFixed(8);
+
+    const dp = BigNumber(metric.volumeToken).dp();
+    const dp2 = BigNumber(event.data.quantity).dp();
+    const finalDp = dp >= dp2 ? dp : dp2;
+    metric.volumeToken = BigNumber(metric.volumeToken)
+      .plus(event.data.quantity)
+      .toFixed(finalDp);
+
+    metric.lowestPrice = BigNumber(metric.lowestPrice).gt(price)
+      ? price
+      : metric.lowestPrice;
+
+    metric.highestPrice = BigNumber(metric.highestPrice).lt(price)
+      ? price
+      : metric.highestPrice;
+
+    metric.closePrice = price;
+
+    await marketHistoryColl.updateOne({ _id: metric._id }, { $set: metric });
+  }
+}
+
+async function parseMarketTransferOperations(sender, contract, action, tx, events, payloadObj, dateTimestamp) {
+  let firstTransferIndex = -1;
+  if (events) {
+    for (let idx = 0; idx < events.length; idx += 1) {
+      const insertTx = {
+        ...tx,
+      };
+      const logEvent = events[idx];
+      let eventSender = sender;
+      insertTx.symbol = logEvent.data.symbol;
+      if (action === MarketContract.CANCEL) {
+        eventSender = logEvent.data.to;
+        insertTx.orderType = payloadObj.type;
+        insertTx.orderID = payloadObj.id;
+        insertTx.quantityReturned = logEvent.data.quantity;
+
+        // TODO: get the initial tx and get the price set or this order to update market metrics
+      } else if (action === MarketContract.BUY || action === MarketContract.MARKET_BUY || action === MarketContract.SELL || action === MarketContract.MARKET_SELL) {
+        if (logEvent.event === TokensContract.TRANSFER_TO_CONTRACT) {
+          insertTx.operation = `${contract}_placeOrder`;
+          insertTx.orderType = action;
+          insertTx.price = payloadObj.price;
+          insertTx.quantityLocked = logEvent.data.quantity;
+        } else if (logEvent.event === MarketContract.ORDER_EXPIRED) {
+          // ignore this event
+        } else if (logEvent.event === TokensContract.TRANSFER_FROM_CONTRACT) {
+          eventSender = logEvent.data.to;
+          if (idx + 1 < events.length && events[idx + 1].event === MarketContract.ORDER_EXPIRED) {
+            insertTx.operation = `${contract}_expire`;
+            insertTx.orderId = events[idx + 1].data.txId;
+            if (action === MarketContract.BUY || action === MarketContract.MARKET_BUY) {
+              insertTx.orderType = 'sell';
+            } else {
+              insertTx.orderType = 'buy';
+            }
+            insertTx.quantityUnlocked = logEvent.data.quantity;
+          } else {
+            if (firstTransferIndex === -1) {
+              firstTransferIndex = idx;
+            }
+
+            if ((idx - firstTransferIndex) % 2 === 0) {
+              insertTx.operation = `${contract}_buy`;
+              insertTx.from = events[idx + 1].data.to;
+              insertTx.quantityTokens = logEvent.data.quantity;
+              insertTx.quantitySteem = events[idx + 1].data.quantity;
+
+              await insertMarketHistory(dateTimestamp, logEvent.data.symbol, logEvent, events[idx + 1]);
+            } else {
+              insertTx.operation = `${contract}_sell`;
+              insertTx.to = events[idx - 1].data.to;
+              insertTx.quantityTokens = events[idx - 1].data.quantity;
+              insertTx.quantitySteem = logEvent.data.quantity;
+              insertTx.symbol = events[idx - 1].data.symbol;
+            }
+          }
+        } else if (logEvent.event === MarketContract.ORDER_CLOSED) {
+          eventSender = logEvent.data.account;
+          insertTx.operation = `${contract}_closeOrder`;
+          insertTx.orderID = logEvent.data.txId;
+          insertTx.orderType = logEvent.data.type;
+        }
+      }
+      await insertHistoryForAccounts(insertTx, [eventSender]);
+    }
+  }
+}
+
+async function parseMarketContract(sender, contract, action, tx, events, payloadObj, dateTimestamp) {
+  switch (action) {
+    case MarketContract.CANCEL:
+    case MarketContract.BUY:
+    case MarketContract.MARKET_BUY:
+    case MarketContract.SELL:
+    case MarketContract.MARKET_SELL:
+      await parseMarketTransferOperations(sender, contract, action, tx, events, payloadObj, dateTimestamp);
+      break;
+    default:
+      console.log(`Action ${action} is not implemented for 'market' contract yet.`);
+  }
+}
+
+async function parseLotteryOperation(sender, contract, action, tx, events) {
+  const insertTx = tx;
+
+  if (events && events.length > 1) {
+    const {
+      poolId,
+      winners,
+    } = events[0].data;
+    const {
+      symbol,
+    } = events[1].data;
+    for (let i = 0; i < winners.length; i += 1) {
+      insertTx.poolId = poolId;
+      insertTx.symbol = symbol;
+      insertTx.quantity = winners[i].winningAmount;
+      insertTx.operation = `${contract}_lottery`;
+      await insertHistoryForAccounts(insertTx, [winners[i].winner]);
+    }
+  }
+}
+
+async function parseMiningContract(sender, contract, action, tx, events) {
+  switch (action) {
+    case MiningContract.CHECK_PENDING_LOTTERIES:
+      await parseLotteryOperation(sender, contract, action, tx, events);
+      break;
+    default:
+      console.log(`Action ${action} is not implemented for 'mining' contract yet.`);
   }
 }
 
@@ -408,7 +615,7 @@ async function parseTx(tx, blockNumber, dateTimestamp, finalTimestamp) {
     logs,
   } = tx;
 
-  let finalTx = {
+  const finalTx = {
     blockNumber,
     transactionId,
     timestamp: finalTimestamp,
@@ -416,7 +623,10 @@ async function parseTx(tx, blockNumber, dateTimestamp, finalTimestamp) {
   };
 
   const logsObj = JSON.parse(logs);
-  const payloadObj = JSON.parse(payload);
+  let payloadObj = null;
+  if (payload) {
+    payloadObj = JSON.parse(payload);
+  }
   const { events, errors } = logsObj;
 
   if (errors === undefined) {
@@ -425,6 +635,7 @@ async function parseTx(tx, blockNumber, dateTimestamp, finalTimestamp) {
         await parseTokensContract(sender, contract, action, finalTx, events, payloadObj);
         break;
       case Contracts.MARKET:
+        // await parseMarketContract(sender, contract, action, finalTx, events, payloadObj, dateTimestamp);
         break;
       case Contracts.NFT:
         await parseNftContract(sender, contract, action, finalTx, events, payloadObj);
@@ -439,12 +650,15 @@ async function parseTx(tx, blockNumber, dateTimestamp, finalTimestamp) {
         // TODO implement contract
         break;
       case Contracts.MINING:
-        // TODO implement contract
+        await parseMiningContract(sender, contract, action, finalTx, events);
         break;
       case Contracts.BOT_CONTROLLER:
         // TODO implement contract
         break;
       case Contracts.MARKET_POOLS:
+        // TODO implement contract
+        break;
+      case Contracts.INFLATION:
         // TODO implement contract
         break;
       default:
@@ -453,414 +667,6 @@ async function parseTx(tx, blockNumber, dateTimestamp, finalTimestamp) {
   } else {
     // an error occurred -> no need to process the transaction
   }
-
-  if (contract === 'market') {
-    if (errors === undefined
-      && action === 'cancel'
-      && events && events.length > 0) {
-      const {
-        to,
-        symbol,
-        quantity,
-      } = events[0].data;
-
-      finalTx.account = to;
-      finalTx.operation = `${contract}_${action}`;
-      finalTx.orderType = payloadObj.type;
-      finalTx.orderID = payloadObj.id;
-      finalTx.symbol = symbol;
-      finalTx.quantityReturned = quantity;
-      await accountsHistoryColl.insertOne(finalTx);
-
-      // TODO: get the initial tx and get the price set or this order to update market metrics
-    } else if (errors === undefined
-      && (action === 'buy' || action === 'marketBuy')
-      && events && events.length > 0) {
-      // the first event holds the data regarding the order that has been placed
-      const nbEvents = events.length;
-      const {
-        quantity,
-      } = events[0].data;
-      // eslint-disable-next-line prefer-destructuring
-      const symbol = payloadObj.symbol;
-      finalTx.account = sender;
-      finalTx.operation = `${contract}_placeOrder`;
-      finalTx.orderType = action;
-      finalTx.price = payloadObj.price;
-      finalTx.symbol = symbol;
-      finalTx.quantityLocked = quantity;
-      await accountsHistoryColl.insertOne(finalTx);
-
-      if (nbEvents > 1) {
-        // the following events are potentially expired orders
-        let startIndex = 1;
-
-        for (let idx = startIndex; idx < nbEvents; idx += 1) {
-          finalTx = {
-            blockNumber,
-            transactionId,
-            timestamp: finalTimestamp,
-          };
-          const event = events[idx];
-          let nextEvent = null;
-          if (idx + 1 < nbEvents) {
-            nextEvent = events[idx + 1];
-          }
-
-          // if the next event is a SWAP.HIVE transfer
-          // then the current event is an order being filled
-          // so the expired orders have been processed
-          if (nextEvent && nextEvent.data.symbol === 'SWAP.HIVE') {
-            startIndex = idx;
-            break;
-          }
-
-          if (nextEvent && nextEvent.event === 'orderExpired') {
-            finalTx.account = event.data.to;
-            finalTx.operation = `${contract}_expire`;
-            finalTx.orderId = nextEvent.data.txId;
-            finalTx.orderType = 'sell';
-            finalTx.symbol = symbol;
-            finalTx.quantityUnlocked = event.data.quantity;
-            await accountsHistoryColl.insertOne(finalTx);
-            startIndex = idx + 1;
-          }
-        }
-
-        // the following events are related to the order being filled
-        for (let idx = startIndex; idx < nbEvents; idx += 1) {
-          finalTx = {
-            blockNumber,
-            transactionId,
-            timestamp: finalTimestamp,
-          };
-          const event = events[idx];
-          let nextEvent = null;
-          if (idx + 1 < nbEvents) {
-            nextEvent = events[idx + 1];
-          }
-
-          // if the event is a symbol transfer
-          // and the next event is a SWAP.HIVE transfer
-          // and the to is the sender
-          if (event.data.to === sender
-            && event.data.symbol === symbol
-            && nextEvent && nextEvent.data.to !== sender
-            && nextEvent.data.symbol === 'SWAP.HIVE') {
-            // buy event
-            finalTx.account = event.data.to;
-            finalTx.operation = `${contract}_buy`;
-            finalTx.from = nextEvent.data.to;
-            finalTx.symbol = symbol;
-            finalTx.quantityTokens = event.data.quantity;
-            finalTx.quantitySteem = nextEvent.data.quantity;
-            await accountsHistoryColl.insertOne(finalTx);
-
-            // sell event
-            finalTx = {
-              blockNumber,
-              transactionId,
-              timestamp: finalTimestamp,
-            };
-            finalTx.account = nextEvent.data.to;
-            finalTx.operation = `${contract}_sell`;
-            finalTx.to = event.data.to;
-            finalTx.symbol = symbol;
-            finalTx.quantityTokens = event.data.quantity;
-            finalTx.quantitySteem = nextEvent.data.quantity;
-            await accountsHistoryColl.insertOne(finalTx);
-
-            let metric = await marketHistoryColl.findOne({ timestamp: dateTimestamp, symbol });
-            const price = BigNumber(nextEvent.data.quantity)
-              .dividedBy(event.data.quantity)
-              .toFixed(8);
-            if (metric === null) {
-              metric = {
-                timestamp: dateTimestamp,
-                symbol,
-                volumeSteem: nextEvent.data.quantity,
-                volumeToken: event.data.quantity,
-                lowestPrice: price,
-                highestPrice: price,
-                openPrice: price,
-                closePrice: price,
-              };
-
-              await marketHistoryColl.insertOne(metric);
-            } else {
-              metric.volumeSteem = BigNumber(metric.volumeSteem)
-                .plus(nextEvent.data.quantity)
-                .toFixed(8);
-
-              const dp = BigNumber(metric.volumeToken).dp();
-              const dp2 = BigNumber(event.data.quantity).dp();
-              const finalDp = dp >= dp2 ? dp : dp2;
-              metric.volumeToken = BigNumber(metric.volumeToken)
-                .plus(event.data.quantity)
-                .toFixed(finalDp);
-
-              metric.lowestPrice = BigNumber(metric.lowestPrice).gt(price)
-                ? price
-                : metric.lowestPrice;
-
-              metric.highestPrice = BigNumber(metric.highestPrice).lt(price)
-                ? price
-                : metric.highestPrice;
-
-              metric.closePrice = price;
-
-              await marketHistoryColl.updateOne({ _id: metric._id }, { $set: metric });
-            }
-
-            idx += 1;
-          } else if (event.event === 'orderClosed') {
-            // market order closed
-            finalTx.account = event.data.account;
-            finalTx.operation = `${contract}_closeOrder`;
-            finalTx.orderID = event.data.txId;
-            finalTx.orderType = event.data.type;
-            await accountsHistoryColl.insertOne(finalTx);
-          }
-        }
-      }
-    } else if (errors === undefined
-      && (action === 'sell' || action === 'marketSell')
-      && events && events.length > 0) {
-      // the first event holds the data regarding the order that has been placed
-      const nbEvents = events.length;
-      const {
-        quantity,
-      } = events[0].data;
-      // eslint-disable-next-line prefer-destructuring
-      const symbol = payloadObj.symbol;
-      finalTx.account = sender;
-      finalTx.operation = `${contract}_placeOrder`;
-      finalTx.orderType = action;
-      finalTx.price = payloadObj.price;
-      finalTx.symbol = symbol;
-      finalTx.quantityLocked = quantity;
-      await accountsHistoryColl.insertOne(finalTx);
-
-      if (nbEvents > 1) {
-        // the following events are potentially expired orders
-        let startIndex = 1;
-
-        for (let idx = startIndex; idx < nbEvents; idx += 1) {
-          finalTx = {
-            blockNumber,
-            transactionId,
-            timestamp: finalTimestamp,
-          };
-          const event = events[idx];
-          let nextEvent = null;
-          if (idx + 1 < nbEvents) {
-            nextEvent = events[idx + 1];
-          }
-
-          if (event.data.symbol === symbol) {
-            startIndex = idx;
-            break;
-          }
-
-          if (nextEvent && nextEvent.event === 'orderExpired') {
-            finalTx.account = event.data.to;
-            finalTx.operation = `${contract}_expire`;
-            finalTx.orderId = nextEvent.data.txId;
-            finalTx.orderType = 'buy';
-            finalTx.symbol = event.data.symbol;
-            finalTx.quantityUnlocked = event.data.quantity;
-            await accountsHistoryColl.insertOne(finalTx);
-          }
-        }
-
-        // the following events are related to the order being filled
-        for (let idx = startIndex; idx < nbEvents; idx += 1) {
-          finalTx = {
-            blockNumber,
-            transactionId,
-            timestamp: finalTimestamp,
-          };
-          const event = events[idx];
-          let nextEvent = null;
-          if (idx + 1 < nbEvents) {
-            nextEvent = events[idx + 1];
-          }
-
-          // if the event is a symbol transfer
-          // and the next event is a SWAP.HIVE transfer
-          // and the next event to is the sender
-          if (event.data.to !== sender
-            && event.data.symbol === symbol
-            && nextEvent && nextEvent.data.to === sender
-            && nextEvent.data.symbol === 'SWAP.HIVE') {
-            // buy event
-            finalTx.account = event.data.to;
-            finalTx.operation = `${contract}_buy`;
-            finalTx.from = nextEvent.data.to;
-            finalTx.symbol = symbol;
-            finalTx.quantityTokens = event.data.quantity;
-            finalTx.quantitySteem = nextEvent.data.quantity;
-            await accountsHistoryColl.insertOne(finalTx);
-
-            // sell event
-            finalTx = {
-              blockNumber,
-              transactionId,
-              timestamp: finalTimestamp,
-            };
-            finalTx.account = nextEvent.data.to;
-            finalTx.operation = `${contract}_sell`;
-            finalTx.to = event.data.to;
-            finalTx.symbol = symbol;
-            finalTx.quantityTokens = event.data.quantity;
-            finalTx.quantitySteem = nextEvent.data.quantity;
-            await accountsHistoryColl.insertOne(finalTx);
-
-            let metric = await marketHistoryColl.findOne({ timestamp: dateTimestamp, symbol });
-            const price = BigNumber(nextEvent.data.quantity)
-              .dividedBy(event.data.quantity)
-              .toFixed(8);
-            if (metric === null) {
-              metric = {
-                timestamp: dateTimestamp,
-                symbol,
-                volumeSteem: nextEvent.data.quantity,
-                volumeToken: event.data.quantity,
-                lowestPrice: price,
-                highestPrice: price,
-                openPrice: price,
-                closePrice: price,
-              };
-
-              await marketHistoryColl.insertOne(metric);
-            } else {
-              metric.volumeSteem = BigNumber(metric.volumeSteem)
-                .plus(nextEvent.data.quantity)
-                .toFixed(8);
-
-              const dp = BigNumber(metric.volumeToken).dp();
-              const dp2 = BigNumber(event.data.quantity).dp();
-              const finalDp = dp >= dp2 ? dp : dp2;
-              metric.volumeToken = BigNumber(metric.volumeToken)
-                .plus(event.data.quantity)
-                .toFixed(finalDp);
-
-              metric.lowestPrice = BigNumber(metric.lowestPrice).gt(price)
-                ? price
-                : metric.lowestPrice;
-
-              metric.highestPrice = BigNumber(metric.highestPrice).lt(price)
-                ? price
-                : metric.highestPrice;
-
-              metric.closePrice = price;
-
-              await marketHistoryColl.updateOne({ _id: metric._id }, { $set: metric });
-            }
-
-            idx += 1;
-          } else if (event.event === 'orderClosed') {
-            // market order closed
-            finalTx.account = event.data.account;
-            finalTx.operation = `${contract}_closeOrder`;
-            finalTx.orderID = event.data.txId;
-            finalTx.orderType = event.data.type;
-            await accountsHistoryColl.insertOne(finalTx);
-          }
-        }
-      }
-    }
-  }
-}
-
-async function parseVirtualTx(tx, blockNumber, finalTimestamp) {
-  const {
-    contract,
-    action,
-    transactionId,
-    logs,
-  } = tx;
-
-  const finalTx = {
-    blockNumber,
-    transactionId,
-    timestamp: finalTimestamp,
-  };
-
-  const logsObj = JSON.parse(logs);
-  const { events, errors } = logsObj;
-
-  if (contract === 'tokens') {
-    if (errors === undefined
-      && action === 'checkPendingUnstakes'
-      && events && events.length > 0) {
-      const {
-        account,
-        symbol,
-        quantity,
-      } = events[0].data;
-
-      finalTx.account = account;
-      finalTx.operation = `${contract}_unstake`;
-      finalTx.symbol = symbol;
-      finalTx.quantity = quantity;
-
-      await accountsHistoryColl.insertOne(finalTx);
-    } else if (errors === undefined
-      && action === 'checkPendingUndelegations'
-      && events && events.length > 0) {
-      const {
-        account,
-        symbol,
-        quantity,
-      } = events[0].data;
-
-      finalTx.account = account;
-      finalTx.operation = `${contract}_undelegateDone`;
-      finalTx.symbol = symbol;
-      finalTx.quantity = quantity;
-
-      await accountsHistoryColl.insertOne(finalTx);
-    }
-  } else if (contract === 'mining') {
-    if (errors === undefined
-      && action === 'checkPendingLotteries'
-      && events && events.length > 1) {
-      const {
-        poolId,
-        winners,
-      } = events[0].data;
-      const {
-        symbol,
-      } = events[1].data;
-      for (let i = 0; i < winners.length; i += 1) {
-        finalTx.poolId = poolId;
-        finalTx.account = winners[i].winner;
-        finalTx.symbol = symbol;
-        finalTx.quantity = winners[i].winningAmount;
-        finalTx.operation = 'mining_lottery';
-        finalTx._id = null;
-        await accountsHistoryColl.insertOne(finalTx);
-      }
-    }
-  }
-  /* else if (contract === 'nft') {
-    if (errors === undefined
-      && action === 'checkPendingUndelegations'
-      && events && events.length > 0) {
-      const {
-        symbol,
-        ids,
-      } = events[0].data;
-
-      finalTx.account = account;
-      finalTx.operation = `${contract}_undelegateDone`;
-      finalTx.symbol = symbol;
-      finalTx.ids = ids;
-
-      await accountsHistoryColl.insertOne(finalTx);
-    }
-  } */
 }
 
 async function parseBlock(block) {
@@ -878,14 +684,10 @@ async function parseBlock(block) {
   const dateTimestamp = new Date(stringDate).getTime() / 1000;
   const finalTimestamp = blockDate.getTime() / 1000;
 
-  for (let index = 0; index < transactions.length; index += 1) {
-    const tx = transactions[index];
+  const allTransactions = transactions.concat(virtualTransactions);
+  for (let index = 0; index < allTransactions.length; index += 1) {
+    const tx = allTransactions[index];
     await parseTx(tx, blockNumber, dateTimestamp, finalTimestamp);
-  }
-
-  for (let index = 0; index < virtualTransactions.length; index += 1) {
-    const tx = virtualTransactions[index];
-    await parseVirtualTx(tx, blockNumber, finalTimestamp);
   }
 
   lastSSCBlockParsed = blockNumber;
