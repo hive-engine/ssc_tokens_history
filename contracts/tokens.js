@@ -2,10 +2,47 @@
 /* eslint-disable no-await-in-loop */
 const {
   insertHistoryForAccounts,
-  parseTransferOperations,
+  parseEvents,
 } = require('./util');
 
-const { TokensContract } = require('../history_builder.constants');
+const {
+  TokensContract,
+  Contracts,
+} = require('../history_builder.constants');
+
+
+async function parseTransferOperation(collection, tx, logEvent, payloadObj) {
+  const insertTx = tx;
+  const {
+    from,
+    to,
+    symbol,
+    quantity,
+  } = logEvent.data;
+
+  const finalFrom = logEvent.event === 'transferFromContract' ? `contract_${from}` : from;
+  const finalTo = logEvent.event === 'transferToContract' || logEvent.event === 'issueToContract' ? `contract_${to}` : to;
+
+  insertTx.from = finalFrom;
+  insertTx.to = finalTo;
+  insertTx.symbol = symbol;
+  insertTx.quantity = quantity;
+  insertTx.memo = null;
+  const { memo } = payloadObj;
+  if (memo && typeof memo === 'string') {
+    insertTx.memo = memo;
+  }
+
+  await insertHistoryForAccounts(collection, insertTx, [finalFrom, finalTo]);
+}
+
+async function parseTransferOperations(collection, tx, events, payloadObj) {
+  await parseEvents(events, (event) => {
+    if (event.contract === Contracts.TOKENS) {
+      parseTransferOperation(collection, tx, event, payloadObj);
+    }
+  });
+}
 
 
 async function parseStakeDelegateOperations(collection, sender, contract, action, tx, events, payloadObj) {
@@ -133,3 +170,5 @@ async function parseTokensContract(collection, sender, contract, action, tx, eve
 }
 
 module.exports.parseTokensContract = parseTokensContract;
+module.exports.parseTransferOperation = parseTransferOperation;
+module.exports.parseTransferOperations = parseTransferOperations;

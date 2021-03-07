@@ -2,7 +2,7 @@
 /* eslint-disable no-await-in-loop */
 const {
   parseTransferOperations,
-} = require('./util');
+} = require('./tokens');
 
 const { HivePeggedContract } = require('../history_builder.constants');
 

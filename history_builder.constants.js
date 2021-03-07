@@ -106,6 +106,18 @@ const InflationContract = {
   ISSUE_NEW_TOKENS: 'issueNewTokens',
 };
 
+const NftMarketContract = {
+  ENABLE_MARKET: 'enableMarket',
+  BUY: 'buy',
+  SELL: 'sell',
+  CANCEL: 'cancel',
+  CHANGE_PRICE: 'changePrice',
+  HIT_SELL_ORDER: 'hitSellOrder',
+  SELL_ORDER: 'sellOrder',
+  CANCEL_ORDER: 'cancelOrder',
+  SET_MARKET_PARAMS: 'setMarketParams',
+};
+
 module.exports.Contracts = Contracts;
 module.exports.MarketContract = MarketContract;
 module.exports.TokensContract = TokensContract;
@@ -114,3 +126,4 @@ module.exports.HivePeggedContract = HivePeggedContract;
 module.exports.MiningContract = MiningContract;
 module.exports.NftContract = NftContract;
 module.exports.InflationContract = InflationContract;
+module.exports.NftMarketContract = NftMarketContract;

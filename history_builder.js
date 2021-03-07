@@ -20,6 +20,7 @@ const { parseHivePeggedContract } = require('./contracts/hivepegged');
 const { parseTokensContract } = require('./contracts/tokens');
 const { parseInflationContract } = require('./contracts/inflation');
 const { parseMarketContract } = require('./contracts/market');
+const { parseNftMarketContract } = require('./contracts/nftmarket');
 
 
 const sscNodes = new Queue();
@@ -42,21 +43,19 @@ let marketHistoryColl = null;
 let { lastSSCBlockParsed } = config; // eslint-disable-line prefer-const
 
 
-
-async function parseNftMarketContract(sender, contract, action, tx, events, payloadObj) {
-  // TODO implement contract
-}
-
 async function parseBotControllerContract(sender, contract, action, tx, events, payloadObj) {
   // TODO implement contract
+  console.log(`Action ${action} is not implemented for 'nftmarket' contract yet.`);
 }
 
 async function parseMarketPoolsContract(sender, contract, action, tx, events, payloadObj) {
   // TODO implement contract
+  console.log(`Action ${action} is not implemented for 'nftmarket' contract yet.`);
 }
 
 async function parseCritterManagerContract(sender, contract, action, tx, events, payloadObj) {
   // TODO implement contract
+  console.log(`Action ${action} is not implemented for 'nftmarket' contract yet.`);
 }
 
 function ignoreContractAction(contract, action) {
@@ -106,7 +105,7 @@ async function parseTx(tx, blockNumber, dateTimestamp, finalTimestamp) {
   } else if (contract === Contracts.HIVE_PEGGED) {
     await parseHivePeggedContract(accountsHistoryColl, action, finalTx, events, payloadObj);
   } else if (contract === Contracts.NFT_MARKET) {
-    await parseNftMarketContract(sender, contract, action, finalTx, events, payloadObj);
+    await parseNftMarketContract(accountsHistoryColl, sender, contract, action, finalTx, events, payloadObj);
   } else if (contract === Contracts.MINING) {
     await parseMiningContract(accountsHistoryColl, sender, contract, action, finalTx, events);
   } else if (contract === Contracts.BOT_CONTROLLER) {

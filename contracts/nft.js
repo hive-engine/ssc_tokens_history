@@ -4,8 +4,9 @@ const {
   insertHistoryForAccount,
   insertHistoryForAccounts,
   parseEvents,
-  parseTransferOperation,
 } = require('./util');
+
+const { parseTransferOperation } = require('./tokens');
 
 
 const {
@@ -245,3 +246,4 @@ async function parseNftContract(collection, sender, contract, action, tx, events
 }
 
 module.exports.parseNftContract = parseNftContract;
+module.exports.parseTransferNftOperation = parseTransferNftOperation;

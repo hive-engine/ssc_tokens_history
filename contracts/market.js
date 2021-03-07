@@ -5,8 +5,10 @@ const BigNumber = require('bignumber.js');
 const {
   insertHistoryForAccount,
   parseEvents,
-  parseTransferOperation,
 } = require('./util');
+
+
+const { parseTransferOperation } = require('./tokens');
 
 const {
   MarketContract,
@@ -101,7 +103,11 @@ async function parseMarketTransferOperations(collection, marketCollection, sende
           if ((idx - firstTransferIndex) % 2 === 0) {
             // handle transfer of remaining quantity from previous order
             if (event.data.symbol === HIVEPEGGED_SYMBOL) {
-              insertTx.operation = `${contract}_buyLeft`;
+              if (action === MarketContract.BUY || action === MarketContract.MARKET_BUY) {
+                insertTx.operation = `${contract}_buyRemaining`;
+              } else {
+                insertTx.operation = `${contract}_sellRemaining`;
+              }
               parseTransferOperation(collection, tx, event, payloadObj);
 
               firstTransferIndex = idx + 1;

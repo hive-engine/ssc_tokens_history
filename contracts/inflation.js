@@ -2,7 +2,7 @@
 /* eslint-disable no-await-in-loop */
 const {
   parseTransferOperations,
-} = require('./util');
+} = require('./tokens');
 
 const { InflationContract } = require('../history_builder.constants');
 
