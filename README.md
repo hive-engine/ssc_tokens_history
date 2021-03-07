@@ -119,9 +119,14 @@ https://accounts.hive-engine.com/accountHistory
 - `nft_updateOrgName`:  the org name of a nft was updated
 - `nft_updateProductName`: the product name of a nft was updated
 
+For all nft actions which require a fee there will be an operation:
+
+- `nft_*Fee`: fee for executing the action
+
 ##### Nftmarket contract
 
 - `nftmarket_buy`: an order was bought
+- `nftmarket_buyFee`: the fee of the buy order
 - `nftmarket_sell`: list a new order
 - `nftmarket_cancel`: cancel an order
 - `nftmarket_changePrice`: change the price of an order
