@@ -68,7 +68,9 @@ async function parseTransferNftOperations(collection, tx, events, payloadObj) {
 }
 
 async function parsePayloadNftOperation(collection, sender, contract, action, tx, payloadObj) {
-  const insertTx = tx;
+  const insertTx = {
+    ...tx,
+  };
   insertTx.symbol = payloadObj.symbol;
 
   // additional stuff
@@ -201,7 +203,7 @@ async function parseNftTransferFee(collection, sender, contract, action, tx, eve
         ...tx,
       };
       insertTx.operation = `${contract}_${action}Fee`;
-      parseTransferOperation(collection, tx, event, payloadObj);
+      parseTransferOperation(collection, insertTx, event, payloadObj);
     }
   });
 }

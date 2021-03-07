@@ -39,14 +39,19 @@ async function parseTransferOperation(collection, tx, logEvent, payloadObj) {
 async function parseTransferOperations(collection, tx, events, payloadObj) {
   await parseEvents(events, (event) => {
     if (event.contract === Contracts.TOKENS) {
-      parseTransferOperation(collection, tx, event, payloadObj);
+      const insertTx = {
+        ...tx,
+      };
+      parseTransferOperation(collection, insertTx, event, payloadObj);
     }
   });
 }
 
 
 async function parseStakeDelegateOperations(collection, sender, contract, action, tx, events, payloadObj) {
-  const insertTx = tx;
+  const insertTx = {
+    ...tx,
+  };
   let accounts = [sender];
   if (events && events.length > 0) {
     const logEvent = events[0].data;
@@ -94,7 +99,9 @@ async function parseStakeDelegateOperations(collection, sender, contract, action
 }
 
 async function parsePayloadTokensOperation(collection, sender, contract, action, tx, payloadObj) {
-  const insertTx = tx;
+  const insertTx = {
+    ...tx,
+  };
   insertTx.symbol = payloadObj.symbol;
 
   // additional stuff

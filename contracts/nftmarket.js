@@ -45,18 +45,23 @@ async function parseNftChangePrice(collection, sender, contract, action, tx, eve
 
 async function parseNftBuy(collection, sender, contract, action, tx, events, payloadObj) {
   if (events && events.length > 0) {
-    const insertTx = tx;
+    const insertTx = {
+      ...tx,
+    };
     // fee
     insertTx.operation = `${contract}_${action}Fee`;
-    await parseTransferOperation(collection, tx, events[0], payloadObj);
+    await parseTransferOperation(collection, insertTx, events[0], payloadObj);
     // buy price
     insertTx.operation = `${contract}_${action}`;
-    await parseTransferOperation(collection, tx, events[1], payloadObj);
+    await parseTransferOperation(collection, insertTx, events[1], payloadObj);
   }
   await parseEvents(events, (event) => {
     if (event.contract === Contracts.NFT) {
       if (event.event === NftContract.TRANSFER) {
-        parseTransferNftOperation(collection, tx, event, payloadObj);
+        const insertTx = {
+          ...tx,
+        };
+        parseTransferNftOperation(collection, insertTx, event, payloadObj);
       }
     } else if (event.contract === Contracts.NFT_MARKET) {
       if (event.event === NftMarketContract.HIT_SELL_ORDER) {
