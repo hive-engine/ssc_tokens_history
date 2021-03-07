@@ -15,7 +15,6 @@ const {
   TokensContract,
 } = require('../history_builder.constants');
 
-const HIVEPEGGED_SYMBOL = 'SWAP.HIVE';
 
 async function insertMarketHistory(collection, dateTimestamp, symbol, event, nextEvent) {
   let metric = await collection.findOne({ timestamp: dateTimestamp, symbol });
