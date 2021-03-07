@@ -17,6 +17,22 @@ const {
 const { parseTransferNftOperation } = require('./nft');
 
 
+async function parseNftEnableMarket(collection, sender, contract, action, tx, events) {
+  if (events && events.length > 0) {
+    const insertTx = {
+      ...tx,
+    };
+
+    const {
+      symbol,
+    } = events[0].data;
+
+    insertTx.symbol = symbol;
+
+    await insertHistoryForAccount(collection, insertTx, sender);
+  }
+}
+
 async function parseNftChangePrice(collection, sender, contract, action, tx, events) {
   await parseEvents(events, (event) => {
     const insertTx = {
@@ -156,7 +172,9 @@ async function parseNftSellAndCancel(collection, sender, contract, action, tx, e
 async function parseNftMarketContract(collection, sender, contract, action, tx, events, payloadObj) {
   switch (action) {
     // case NftMarketContract.SET_MARKET_PARAMS:
-    // case NftMarketContract.ENABLE_MARKET:
+    case NftMarketContract.ENABLE_MARKET:
+      await parseNftEnableMarket(collection, sender, contract, action, tx, events, payloadObj);
+      break;
     case NftMarketContract.CANCEL:
     case NftMarketContract.SELL:
       await parseNftSellAndCancel(collection, sender, contract, action, tx, events, payloadObj);

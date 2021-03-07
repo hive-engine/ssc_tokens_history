@@ -130,6 +130,7 @@ For all nft actions which require a fee there will be an operation:
 - `nftmarket_sell`: list a new order
 - `nftmarket_cancel`: cancel an order
 - `nftmarket_changePrice`: change the price of an order
+- `nftmarket_enableMarket`: enable market for nft symbol
 
 
 
