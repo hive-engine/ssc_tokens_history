@@ -73,6 +73,7 @@ async function parseNftBuy(collection, sender, contract, action, tx, events, pay
           sellers,
           paymentTotal,
           marketAccount,
+          feeTotal,
         } = event.data;
 
         const insertTx = {
@@ -84,10 +85,10 @@ async function parseNftBuy(collection, sender, contract, action, tx, events, pay
 
         for (let i = 0; i < sellers.length; i += 1) {
           const {
-            sellerAccount,
-            sellerOwnedBy,
-            sellerNftIds,
-            paymentSeller,
+            account: sellerAccount,
+            ownedBy: sellerOwnedBy,
+            nftIds: sellerNftIds,
+            paymentTotal: paymentSeller,
           } = sellers[i];
 
           const insertTxBuy = {
