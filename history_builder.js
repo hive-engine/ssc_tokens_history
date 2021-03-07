@@ -46,6 +46,11 @@ let marketHistoryColl = null;
 let { lastSSCBlockParsed } = config; // eslint-disable-line prefer-const
 
 function ignoreContract(contract) {
+  if (config && config.ignoreContracts && config.ignoreContracts instanceof Array) {
+    if (config.ignoreContracts.includes(contract)) {
+      return true;
+    }
+  }
   switch (contract) {
     case Contracts.CONTRACT:
       return true;
@@ -77,6 +82,8 @@ async function parseTx(tx, blockNumber, dateTimestamp, finalTimestamp) {
 
   if (errors !== undefined) {
     // an error occurred -> no need to process the transaction
+  } else if (ignoreContract(contract)) {
+    // ignore the given contract
   } else if (contract === Contracts.TOKENS) {
     await parseTokensContract(accountsHistoryColl, sender, contract, action, finalTx, events, payloadObj);
   } else if (contract === Contracts.MARKET) {
@@ -100,9 +107,7 @@ async function parseTx(tx, blockNumber, dateTimestamp, finalTimestamp) {
   } else if (contract === Contracts.CRITTER_MANAGER) {
     await parseCritterManagerContract(accountsHistoryColl, sender, contract, action, finalTx, events, payloadObj);
   } else {
-    if (!ignoreContract(contract, action)) {
-      console.log(`Contract ${contract} is not implemented yet.`);
-    }
+    console.log(`Contract ${contract} is not implemented yet.`);
   }
 }
 

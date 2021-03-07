@@ -4,5 +4,7 @@
     ],
     "lastSSCBlockParsed": 0,
     "port": 3000,
-    "pollingTime": 1000
+    "pollingTime": 1000,
+    "ignoreContracts": [],
+    "ignoreSymbols": []
 }

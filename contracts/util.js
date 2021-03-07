@@ -1,11 +1,18 @@
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable no-await-in-loop */
 
+const config = require('../config');
+
 
 async function insertHistoryForAccount(collection, tx, account) {
   const insertTx = tx;
   insertTx._id = null;
   insertTx.account = account;
+
+  const { symbol } = insertTx;
+  if (symbol && config && config.ignoreSymbols && config.ignoreSymbols instanceof Array && config.ignoreSymbols.includes(symbol)) {
+    return;
+  }
   await collection.insertOne(insertTx);
 }
 
