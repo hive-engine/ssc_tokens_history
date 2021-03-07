@@ -143,7 +143,7 @@ async function parseNftUpdatePropertyDefinition(collection, sender, tx, events) 
   txNft.newType = newType;
   txNft.newIsReadOnly = newIsReadOnly;
 
-  await insertHistoryForAccount(txNft, sender);
+  await insertHistoryForAccount(collection, txNft, sender);
 }
 
 async function parseNftUndelegate(collection, sender, contract, action, tx, events) {
@@ -167,7 +167,7 @@ async function parseNftUndelegate(collection, sender, contract, action, tx, even
       txNft.from = finalFrom;
       txNft.id = id;
 
-      insertHistoryForAccount(txNft, sender);
+      insertHistoryForAccount(collection, txNft, sender);
     }
   });
 }
@@ -189,7 +189,7 @@ async function parseNftCheckPendingUndelegations(collection, sender, contract, a
       txNft.ids = ids;
       txNft.operation = `${contract}_undelegateDone`;
 
-      insertHistoryForAccount(txNft, sender);
+      insertHistoryForAccount(collection, txNft, sender);
     }
   });
 }
