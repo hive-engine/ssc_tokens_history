@@ -33,7 +33,6 @@ async function parseTransferNftOperation(collection, tx, logEvent) {
   insertTx.to = finalTo;
   insertTx.symbol = symbol;
   insertTx.id = id;
-  insertTx.memo = null;
 
   await insertHistoryForAccounts(collection, insertTx, [finalFrom, finalTo]);
 }
