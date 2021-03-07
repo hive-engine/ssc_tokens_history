@@ -32,7 +32,7 @@ async function parseTransferNftOperation(collection, tx, logEvent) {
   insertTx.from = finalFrom;
   insertTx.to = finalTo;
   insertTx.symbol = symbol;
-  insertTx.id = id;
+  insertTx.nft = id;
 
   await insertHistoryForAccounts(collection, insertTx, [finalFrom, finalTo]);
 }
@@ -162,7 +162,7 @@ async function parseNftUndelegate(collection, sender, contract, action, tx, even
 
       txNft.symbol = symbol;
       txNft.from = finalFrom;
-      txNft.id = id;
+      txNft.nft = id;
 
       insertHistoryForAccount(collection, txNft, sender);
     }
@@ -183,7 +183,7 @@ async function parseNftCheckPendingUndelegations(collection, sender, contract, a
       } = event.data;
 
       txNft.symbol = symbol;
-      txNft.ids = ids;
+      txNft.nfts = ids;
       txNft.operation = `${contract}_undelegateDone`;
 
       insertHistoryForAccount(collection, txNft, sender);

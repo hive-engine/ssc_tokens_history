@@ -48,7 +48,7 @@ async function parseNftChangePrice(collection, sender, contract, action, tx, eve
       orderId,
     } = event.data;
 
-    insertTx.id = nftId;
+    insertTx.nft = nftId;
     insertTx.oldPrice = oldPrice;
     insertTx.newPrice = newPrice;
     insertTx.orderId = orderId;
@@ -155,7 +155,7 @@ async function parseNftSellAndCancel(collection, sender, contract, action, tx, e
           ...tx,
         };
         insertTx.symbol = symbol;
-        insertTx.id = nftId;
+        insertTx.nft = nftId;
         insertTx.orderTimestamp = timestamp;
         insertTx.price = price;
         insertTx.priceSymbol = priceSymbol;
