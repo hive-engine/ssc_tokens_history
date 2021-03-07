@@ -101,8 +101,8 @@ async function parseMarketTransferOperations(collection, marketCollection, sende
           }
 
           if ((idx - firstTransferIndex) % 2 === 0) {
-            // handle transfer of remaining quantity from previous order
-            if (event.data.symbol === HIVEPEGGED_SYMBOL) {
+            // handle transfer of remaining quantity
+            if (event.data.symbol === events[idx - 1].data.symbol && (event.event === events[idx - 1].event || idx + 1 >= events.length)) {
               if (action === MarketContract.BUY || action === MarketContract.MARKET_BUY) {
                 insertTx.operation = `${contract}_buyRemaining`;
               } else {

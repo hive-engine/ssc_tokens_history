@@ -45,17 +45,17 @@ let { lastSSCBlockParsed } = config; // eslint-disable-line prefer-const
 
 async function parseBotControllerContract(sender, contract, action, tx, events, payloadObj) {
   // TODO implement contract
-  console.log(`Action ${action} is not implemented for 'nftmarket' contract yet.`);
+  // console.log(`Action ${action} is not implemented for 'botcontroller' contract yet.`);
 }
 
 async function parseMarketPoolsContract(sender, contract, action, tx, events, payloadObj) {
   // TODO implement contract
-  console.log(`Action ${action} is not implemented for 'nftmarket' contract yet.`);
+  // console.log(`Action ${action} is not implemented for 'marketpools' contract yet.`);
 }
 
 async function parseCritterManagerContract(sender, contract, action, tx, events, payloadObj) {
   // TODO implement contract
-  console.log(`Action ${action} is not implemented for 'nftmarket' contract yet.`);
+  console.log(`Action ${action} is not implemented for 'crittermanager' contract yet.`);
 }
 
 function ignoreContractAction(contract, action) {
