@@ -61,6 +61,7 @@ async function insertMarketHistory(collection, dateTimestamp, symbol, event, nex
 }
 
 async function parseMarketTransferOperations(collection, marketCollection, sender, contract, action, tx, events, payloadObj, dateTimestamp) {
+  const symbolTrades = payloadObj.symbol;
   let firstTransferIndex = -1;
   await parseEvents(events, (event, idx) => {
     const insertTx = {
@@ -101,7 +102,12 @@ async function parseMarketTransferOperations(collection, marketCollection, sende
 
           if ((idx - firstTransferIndex) % 2 === 0) {
             // handle transfer of remaining quantity
-            if (event.data.symbol === events[idx - 1].data.symbol && (event.event === events[idx - 1].event || idx + 1 >= events.length)) {
+            // only one element left -> remaining balance (marketBuy, marketSett)
+            // or current element is not in right order (different symbol)
+            // or this and next events symbol are the same
+            if (idx === events.length - 1
+              || event.data.symbol !== symbolTrades
+              || event.data.symbol === events[idx + 1].data.symbol) {
               if (action === MarketContract.BUY || action === MarketContract.MARKET_BUY) {
                 insertTx.operation = `${contract}_buyRemaining`;
               } else {
