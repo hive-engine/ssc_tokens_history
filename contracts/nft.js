@@ -15,7 +15,7 @@ const {
 } = require('../history_builder.constants');
 
 
-async function parseTransferNftOperation(collection, tx, logEvent, payloadObj) {
+async function parseTransferNftOperation(collection, tx, logEvent) {
   const insertTx = tx;
   const {
     from,
@@ -34,15 +34,11 @@ async function parseTransferNftOperation(collection, tx, logEvent, payloadObj) {
   insertTx.symbol = symbol;
   insertTx.id = id;
   insertTx.memo = null;
-  const { memo } = payloadObj;
-  if (memo && typeof memo === 'string') {
-    insertTx.memo = memo;
-  }
 
   await insertHistoryForAccounts(collection, insertTx, [finalFrom, finalTo]);
 }
 
-async function parseTransferNftOperations(collection, tx, events, payloadObj) {
+async function parseTransferNftOperations(collection, tx, events) {
   await parseEvents(events, (e) => {
     const event = e;
     const insertTx = {
@@ -62,7 +58,7 @@ async function parseTransferNftOperations(collection, tx, events, payloadObj) {
         event.data.to = 'null';
         event.data.toType = 'u';
       }
-      parseTransferNftOperation(collection, insertTx, event, payloadObj);
+      parseTransferNftOperation(collection, insertTx, event);
     }
   });
 }
@@ -216,7 +212,7 @@ async function parseNftContract(collection, sender, contract, action, tx, events
     case NftContract.ISSUE_MULTIPLE:
     case NftContract.BURN:
       await parseNftTransferFee(collection, sender, contract, action, tx, events, payloadObj);
-      await parseTransferNftOperations(collection, tx, events, payloadObj);
+      await parseTransferNftOperations(collection, tx, events);
       break;
     case NftContract.SET_PROPERTIES:
     case NftContract.CREATE:
