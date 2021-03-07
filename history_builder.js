@@ -1,5 +1,6 @@
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable no-await-in-loop */
+
 require('dotenv').config();
 const { MongoClient } = require('mongodb');
 const nodeCleanup = require('node-cleanup');
@@ -10,7 +11,6 @@ const config = require('./config');
 
 const {
   Contracts,
-  TokensContract,
 } = require('./history_builder.constants');
 
 const { parseNftContract } = require('./contracts/nft');
@@ -21,6 +21,9 @@ const { parseTokensContract } = require('./contracts/tokens');
 const { parseInflationContract } = require('./contracts/inflation');
 const { parseMarketContract } = require('./contracts/market');
 const { parseNftMarketContract } = require('./contracts/nftmarket');
+const { parseMarketPoolsContract } = require('./contracts/marketpools');
+const { parseBotControllerContract } = require('./contracts/botcontroller');
+const { parseCritterManagerContract } = require('./contracts/crittermanager');
 
 
 const sscNodes = new Queue();
@@ -42,28 +45,10 @@ let marketHistoryColl = null;
 
 let { lastSSCBlockParsed } = config; // eslint-disable-line prefer-const
 
-
-async function parseBotControllerContract(sender, contract, action, tx, events, payloadObj) {
-  // TODO implement contract
-  // console.log(`Action ${action} is not implemented for 'botcontroller' contract yet.`);
-}
-
-async function parseMarketPoolsContract(sender, contract, action, tx, events, payloadObj) {
-  // TODO implement contract
-  // console.log(`Action ${action} is not implemented for 'marketpools' contract yet.`);
-}
-
-async function parseCritterManagerContract(sender, contract, action, tx, events, payloadObj) {
-  // TODO implement contract
-  console.log(`Action ${action} is not implemented for 'crittermanager' contract yet.`);
-}
-
-function ignoreContractAction(contract, action) {
+function ignoreContract(contract) {
   switch (contract) {
     case Contracts.CONTRACT:
       return true;
-    case Contracts.TOKENS:
-      return action === TokensContract.UPDATE_PARAMS;
     default:
       return false;
   }
@@ -92,8 +77,6 @@ async function parseTx(tx, blockNumber, dateTimestamp, finalTimestamp) {
 
   if (errors !== undefined) {
     // an error occurred -> no need to process the transaction
-  } else if (ignoreContractAction(contract, action)) {
-    // ignore contract / action
   } else if (contract === Contracts.TOKENS) {
     await parseTokensContract(accountsHistoryColl, sender, contract, action, finalTx, events, payloadObj);
   } else if (contract === Contracts.MARKET) {
@@ -109,15 +92,17 @@ async function parseTx(tx, blockNumber, dateTimestamp, finalTimestamp) {
   } else if (contract === Contracts.MINING) {
     await parseMiningContract(accountsHistoryColl, sender, contract, action, finalTx, events);
   } else if (contract === Contracts.BOT_CONTROLLER) {
-    await parseBotControllerContract(sender, contract, action, finalTx, events, payloadObj);
+    await parseBotControllerContract(accountsHistoryColl, sender, contract, action, finalTx, events, payloadObj);
   } else if (contract === Contracts.MARKET_POOLS) {
-    await parseMarketPoolsContract(sender, contract, action, finalTx, events, payloadObj);
+    await parseMarketPoolsContract(accountsHistoryColl, sender, contract, action, finalTx, events, payloadObj);
   } else if (contract === Contracts.INFLATION) {
     await parseInflationContract(accountsHistoryColl, sender, contract, action, finalTx, events, payloadObj);
   } else if (contract === Contracts.CRITTER_MANAGER) {
-    await parseCritterManagerContract(sender, contract, action, finalTx, events, payloadObj);
+    await parseCritterManagerContract(accountsHistoryColl, sender, contract, action, finalTx, events, payloadObj);
   } else {
-    console.log(`Contract ${contract} is not implemented yet.`);
+    if (!ignoreContract(contract, action)) {
+      console.log(`Contract ${contract} is not implemented yet.`);
+    }
   }
 }
 
@@ -129,7 +114,7 @@ async function parseBlock(block) {
     blockNumber,
   } = block;
 
-  console.log(`parsing block #${blockNumber}`); // eslint-disable-line no-console
+  console.log(`parsing block #${blockNumber}`);
 
   const blockDate = new Date(`${timestamp}.000Z`);
   const stringDate = `${blockDate.getFullYear()}-${(blockDate.getMonth() + 1).toString().padStart(2, '0')}-${(blockDate.getDate()).toString().padStart(2, '0')}`;

@@ -162,7 +162,7 @@ async function parseTokensContract(collection, sender, contract, action, tx, eve
       await parseStakeDelegateOperations(collection, sender, contract, action, tx, events, payloadObj);
       break;
     case TokensContract.UPDATE_PARAMS:
-      // TODO implement action
+      // ignore updateParams action
       break;
     default:
       console.log(`Action ${action} is not implemented for 'tokens' contract yet.`);

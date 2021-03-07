@@ -162,7 +162,7 @@ async function parseNftMarketContract(collection, sender, contract, action, tx, 
       await parseNftChangePrice(collection, sender, contract, action, tx, events);
       break;
     default:
-      console.log(`Action ${action} is not implemented for 'nftmarket' contract yet.`);
+      console.log(`Action ${action} is not implemented for 'nftmarket' contract yet (${tx.blockNumber}).`);
   }
 }
 
