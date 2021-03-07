@@ -81,7 +81,7 @@ async function parseNftBuy(collection, sender, contract, action, tx, events, pay
         };
         insertTx.symbol = symbol;
         insertTx.priceSymbol = priceSymbol;
-        insertTx.marketAccount = marketAccount;
+        insertTx.marketAccount = payloadObj.marketAccount ? payloadObj.marketAccount : marketAccount;
 
         for (let i = 0; i < sellers.length; i += 1) {
           const {
