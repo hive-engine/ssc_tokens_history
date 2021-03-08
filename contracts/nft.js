@@ -6,8 +6,7 @@ const {
   parseEvents,
 } = require('./util');
 
-const { parseTransferOperation } = require('./tokens');
-
+const { parseTransferFeeOperations } = require('./tokens');
 
 const {
   Contracts,
@@ -191,18 +190,6 @@ async function parseNftCheckPendingUndelegations(collection, sender, contract, a
   });
 }
 
-async function parseNftTransferFee(collection, sender, contract, action, tx, events, payloadObj) {
-  await parseEvents(events, (event) => {
-    if (event.contract === Contracts.TOKENS) {
-      const insertTx = {
-        ...tx,
-      };
-      insertTx.operation = `${contract}_${action}Fee`;
-      parseTransferOperation(collection, insertTx, event, payloadObj);
-    }
-  });
-}
-
 async function parseNftContract(collection, sender, contract, action, tx, events, payloadObj) {
   switch (action) {
     case NftContract.TRANSFER:
@@ -210,7 +197,7 @@ async function parseNftContract(collection, sender, contract, action, tx, events
     case NftContract.ISSUE:
     case NftContract.ISSUE_MULTIPLE:
     case NftContract.BURN:
-      await parseNftTransferFee(collection, sender, contract, action, tx, events, payloadObj);
+      await parseTransferFeeOperations(collection, sender, contract, action, tx, events, payloadObj);
       await parseTransferNftOperations(collection, tx, events);
       break;
     case NftContract.SET_PROPERTIES:
@@ -225,7 +212,7 @@ async function parseNftContract(collection, sender, contract, action, tx, events
     case NftContract.SET_PROPERTY_PERMISSIONS:
     case NftContract.ENABLE_DELEGATION:
     case NftContract.SET_GROUP_BY:
-      await parseNftTransferFee(collection, sender, contract, action, tx, events, payloadObj);
+      await parseTransferFeeOperations(collection, sender, contract, action, tx, events, payloadObj);
       await parsePayloadNftOperation(collection, sender, contract, action, tx, payloadObj);
       break;
     case NftContract.UPDATE_PROPERTY_DEFINITION:

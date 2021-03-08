@@ -2,11 +2,13 @@
 /* eslint-disable no-await-in-loop */
 const {
   insertHistoryForAccount,
-  insertHistoryForAccounts,
   parseEvents,
 } = require('./util');
 
-const { parseTransferOperation } = require('./tokens');
+const {
+  parseTransferOperation,
+  parseTransferFeeOperation,
+} = require('./tokens');
 
 const {
   Contracts,
@@ -65,8 +67,7 @@ async function parseNftBuy(collection, sender, contract, action, tx, events, pay
       ...tx,
     };
     // fee
-    insertTx.operation = `${contract}_${action}Fee`;
-    await parseTransferOperation(collection, insertTx, events[0], payloadObj);
+    await parseTransferFeeOperation(collection, contract, action, insertTx, events[0], payloadObj);
     // buy price
     insertTx.operation = `${contract}_${action}`;
     await parseTransferOperation(collection, insertTx, events[1], payloadObj);
@@ -169,9 +170,33 @@ async function parseNftSellAndCancel(collection, sender, contract, action, tx, e
   });
 }
 
+async function parseNftSetMarketParams(collection, sender, contract, action, tx, events) {
+  if (events && events.length > 0) {
+    const insertTx = {
+      ...tx,
+    };
+
+    const {
+      symbol,
+      officialMarket,
+      agentCut,
+      minFee,
+    } = events[0].data;
+
+    insertTx.officialMarket = officialMarket;
+    insertTx.agentCut = agentCut;
+    insertTx.minFee = minFee;
+    insertTx.symbol = symbol;
+
+    await insertHistoryForAccount(collection, insertTx, sender);
+  }
+}
+
 async function parseNftMarketContract(collection, sender, contract, action, tx, events, payloadObj) {
   switch (action) {
-    // case NftMarketContract.SET_MARKET_PARAMS:
+    case NftMarketContract.SET_MARKET_PARAMS:
+      await parseNftSetMarketParams(collection, sender, contract, action, tx, events);
+      break;
     case NftMarketContract.ENABLE_MARKET:
       await parseNftEnableMarket(collection, sender, contract, action, tx, events, payloadObj);
       break;

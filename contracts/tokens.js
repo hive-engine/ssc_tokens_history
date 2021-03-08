@@ -36,6 +36,22 @@ async function parseTransferOperation(collection, tx, logEvent, payloadObj) {
   await insertHistoryForAccounts(collection, insertTx, [finalFrom, finalTo]);
 }
 
+async function parseTransferFeeOperation(collection, contract, action, tx, event, payloadObj) {
+  if (event.contract === Contracts.TOKENS) {
+    const insertTx = {
+      ...tx,
+    };
+    insertTx.operation = `${contract}_${action}Fee`;
+    await parseTransferOperation(collection, insertTx, event, payloadObj);
+  }
+}
+
+async function parseTransferFeeOperations(collection, contract, action, tx, events, payloadObj) {
+  await parseEvents(events, (event) => {
+    parseTransferFeeOperation(collection, contract, action, tx, event, payloadObj);
+  });
+}
+
 async function parseTransferOperations(collection, tx, events, payloadObj) {
   await parseEvents(events, (event) => {
     if (event.contract === Contracts.TOKENS) {
@@ -159,6 +175,7 @@ async function parseTokensContract(collection, sender, contract, action, tx, eve
     case TokensContract.UNSTAKE:
     case TokensContract.ENABLE_DELEGATION:
       await parsePayloadTokensOperation(collection, sender, contract, action, tx, payloadObj);
+      await parseTransferFeeOperations(collection, contract, action, tx, events, payloadObj);
       break;
     case TokensContract.STAKE:
     case TokensContract.CANCEL_UNSTAKE:
@@ -179,3 +196,5 @@ async function parseTokensContract(collection, sender, contract, action, tx, eve
 module.exports.parseTokensContract = parseTokensContract;
 module.exports.parseTransferOperation = parseTransferOperation;
 module.exports.parseTransferOperations = parseTransferOperations;
+module.exports.parseTransferFeeOperations = parseTransferFeeOperations;
+module.exports.parseTransferFeeOperation = parseTransferFeeOperation;
