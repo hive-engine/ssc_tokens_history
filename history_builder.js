@@ -41,6 +41,7 @@ let ssc = new SSC(getSSCNode());
 let client = null;
 let db = null;
 let accountsHistoryColl = null;
+let nftHistoryColl = null;
 let marketHistoryColl = null;
 
 let { lastSSCBlockParsed } = config; // eslint-disable-line prefer-const
@@ -89,13 +90,13 @@ async function parseTx(tx, blockNumber, dateTimestamp, finalTimestamp) {
   } else if (contract === Contracts.MARKET) {
     await parseMarketContract(accountsHistoryColl, marketHistoryColl, sender, contract, action, finalTx, events, payloadObj, dateTimestamp);
   } else if (contract === Contracts.NFT) {
-    await parseNftContract(accountsHistoryColl, sender, contract, action, finalTx, events, payloadObj);
+    await parseNftContract(accountsHistoryColl, nftHistoryColl, sender, contract, action, finalTx, events, payloadObj);
   } else if (contract === Contracts.WITNESSES) {
     await parseWitnessesContract(accountsHistoryColl, action, finalTx, events, payloadObj);
   } else if (contract === Contracts.HIVE_PEGGED) {
     await parseHivePeggedContract(accountsHistoryColl, action, finalTx, events, payloadObj);
   } else if (contract === Contracts.NFT_MARKET) {
-    await parseNftMarketContract(accountsHistoryColl, sender, contract, action, finalTx, events, payloadObj);
+    await parseNftMarketContract(accountsHistoryColl, nftHistoryColl, sender, contract, action, finalTx, events, payloadObj);
   } else if (contract === Contracts.MINING) {
     await parseMiningContract(accountsHistoryColl, sender, contract, action, finalTx, events);
   } else if (contract === Contracts.BOT_CONTROLLER) {
@@ -163,10 +164,14 @@ const init = async () => {
       accountsHistoryColl = await db.createCollection('accountsHistory');
       await accountsHistoryColl.createIndex({ account: 1, symbol: 1, timestamp: -1 });
       await accountsHistoryColl.createIndex({ transactionId: 1 });
+      await accountsHistoryColl.createIndex({ operation: 1 });
+      nftHistoryColl = await db.createCollection('nftHistory');
+      await nftHistoryColl.createIndex({ nftId: 1, timestamp: -1 });
       marketHistoryColl = await db.createCollection('marketHistory');
       await marketHistoryColl.createIndex({ symbol: 1, timestamp: -1 });
     } else {
       accountsHistoryColl = collection;
+      nftHistoryColl = db.collection('nftHistory');
       marketHistoryColl = db.collection('marketHistory');
     }
 

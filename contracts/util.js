@@ -16,6 +16,19 @@ async function insertHistoryForAccount(collection, tx, account) {
   await collection.insertOne(insertTx);
 }
 
+async function insertHistoryForNft(collection, nftId, otherTx) {
+  const nftTx = {
+    nftId,
+    timestamp: otherTx.timestamp,
+    accountHistoryId: otherTx._id,
+  };
+  const { symbol } = otherTx.symbol;
+  if (symbol && config && config.ignoreSymbols && config.ignoreSymbols instanceof Array && config.ignoreSymbols.includes(symbol)) {
+    return;
+  }
+  await collection.insertOne(nftTx);
+}
+
 async function insertHistoryForAccounts(collection, tx, accounts) {
   const inserted = [];
   for (let i = 0; i < accounts.length; i += 1) {
@@ -37,4 +50,5 @@ async function parseEvents(events, eventCallback) {
 
 module.exports.insertHistoryForAccount = insertHistoryForAccount;
 module.exports.insertHistoryForAccounts = insertHistoryForAccounts;
+module.exports.insertHistoryForNft = insertHistoryForNft;
 module.exports.parseEvents = parseEvents;

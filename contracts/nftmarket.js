@@ -3,6 +3,7 @@
 const {
   insertHistoryForAccount,
   parseEvents,
+  insertHistoryForNft,
 } = require('./util');
 
 const {
@@ -35,7 +36,7 @@ async function parseNftEnableMarket(collection, sender, contract, action, tx, ev
   }
 }
 
-async function parseNftChangePrice(collection, sender, contract, action, tx, events) {
+async function parseNftChangePrice(collection, nftCollection, sender, contract, action, tx, events) {
   await parseEvents(events, (event) => {
     const insertTx = {
       ...tx,
@@ -58,10 +59,11 @@ async function parseNftChangePrice(collection, sender, contract, action, tx, eve
     insertTx.symbol = symbol;
 
     insertHistoryForAccount(collection, insertTx, sender);
+    insertHistoryForNft(nftCollection, nftId, insertTx);
   });
 }
 
-async function parseNftBuy(collection, sender, contract, action, tx, events, payloadObj) {
+async function parseNftBuy(collection, nftCollection, sender, contract, action, tx, events, payloadObj) {
   if (events && events.length > 0) {
     const insertTx = {
       ...tx,
@@ -78,7 +80,7 @@ async function parseNftBuy(collection, sender, contract, action, tx, events, pay
         const insertTx = {
           ...tx,
         };
-        parseTransferNftOperation(collection, insertTx, event, payloadObj);
+        parseTransferNftOperation(collection, nftCollection, insertTx, event, payloadObj);
       }
     } else if (event.contract === Contracts.NFT_MARKET) {
       if (event.event === NftMarketContract.HIT_SELL_ORDER) {
@@ -126,17 +128,20 @@ async function parseNftBuy(collection, sender, contract, action, tx, events, pay
 
           insertHistoryForAccount(collection, insertTxBuy, account);
           insertHistoryForAccount(collection, insertTxSell, sellerAccount);
+          for (let j = 0; j < sellerNftIds.length; j += 1) {
+            insertHistoryForNft(nftCollection, sellerNftIds[j], insertTxSell);
+          }
         }
       }
     }
   });
 }
 
-async function parseNftSellAndCancel(collection, sender, contract, action, tx, events, payloadObj) {
+async function parseNftSellAndCancel(collection, nftCollection, sender, contract, action, tx, events, payloadObj) {
   await parseEvents(events, (event) => {
     if (event.contract === Contracts.NFT) {
       if (event.event === NftContract.TRANSFER) {
-        parseTransferNftOperation(collection, tx, event, payloadObj);
+        parseTransferNftOperation(collection, nftCollection, tx, event, payloadObj);
       }
     } else if (event.contract === Contracts.NFT_MARKET) {
       if (event.event === NftMarketContract.SELL_ORDER || event.event === NftMarketContract.CANCEL_ORDER) {
@@ -165,6 +170,7 @@ async function parseNftSellAndCancel(collection, sender, contract, action, tx, e
         insertTx.operation = `${contract}_${event.event}`;
 
         insertHistoryForAccount(collection, insertTx, account);
+        insertHistoryForNft(nftCollection, nftId, insertTx);
       }
     }
   });
@@ -192,7 +198,7 @@ async function parseNftSetMarketParams(collection, sender, contract, action, tx,
   }
 }
 
-async function parseNftMarketContract(collection, sender, contract, action, tx, events, payloadObj) {
+async function parseNftMarketContract(collection, nftCollection, sender, contract, action, tx, events, payloadObj) {
   switch (action) {
     case NftMarketContract.SET_MARKET_PARAMS:
       await parseNftSetMarketParams(collection, sender, contract, action, tx, events);
@@ -202,13 +208,13 @@ async function parseNftMarketContract(collection, sender, contract, action, tx, 
       break;
     case NftMarketContract.CANCEL:
     case NftMarketContract.SELL:
-      await parseNftSellAndCancel(collection, sender, contract, action, tx, events, payloadObj);
+      await parseNftSellAndCancel(collection, nftCollection, sender, contract, action, tx, events, payloadObj);
       break;
     case NftMarketContract.BUY:
-      await parseNftBuy(collection, sender, contract, action, tx, events, payloadObj);
+      await parseNftBuy(collection, nftCollection, sender, contract, action, tx, events, payloadObj);
       break;
     case NftMarketContract.CHANGE_PRICE:
-      await parseNftChangePrice(collection, sender, contract, action, tx, events);
+      await parseNftChangePrice(collection, nftCollection, sender, contract, action, tx, events);
       break;
     default:
       console.log(`Action ${action} is not implemented for 'nftmarket' contract yet (${tx.blockNumber}).`);

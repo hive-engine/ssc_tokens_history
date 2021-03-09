@@ -3,6 +3,7 @@
 const {
   insertHistoryForAccount,
   insertHistoryForAccounts,
+  insertHistoryForNft,
   parseEvents,
 } = require('./util');
 
@@ -14,7 +15,7 @@ const {
 } = require('../history_builder.constants');
 
 
-async function parseTransferNftOperation(collection, tx, logEvent) {
+async function parseTransferNftOperation(collection, nftCollection, tx, logEvent) {
   const insertTx = tx;
   const {
     from,
@@ -34,9 +35,10 @@ async function parseTransferNftOperation(collection, tx, logEvent) {
   insertTx.nft = id;
 
   await insertHistoryForAccounts(collection, insertTx, [finalFrom, finalTo]);
+  await insertHistoryForNft(nftCollection, id, insertTx);
 }
 
-async function parseTransferNftOperations(collection, tx, events) {
+async function parseTransferNftOperations(collection, nftCollection, tx, events) {
   await parseEvents(events, (e) => {
     const event = e;
     const insertTx = {
@@ -56,12 +58,12 @@ async function parseTransferNftOperations(collection, tx, events) {
         event.data.to = 'null';
         event.data.toType = 'u';
       }
-      parseTransferNftOperation(collection, insertTx, event);
+      parseTransferNftOperation(collection, nftCollection, insertTx, event);
     }
   });
 }
 
-async function parsePayloadNftOperation(collection, sender, contract, action, tx, payloadObj) {
+async function parsePayloadNftOperation(collection, nftCollection, sender, contract, action, tx, payloadObj) {
   const insertTx = {
     ...tx,
   };
@@ -115,6 +117,11 @@ async function parsePayloadNftOperation(collection, sender, contract, action, tx
   }
 
   await insertHistoryForAccounts(collection, insertTx, [sender]);
+  if (action === NftContract.SET_PROPERTIES) {
+    for (let i = 0; i < insertTx.nfts.length; i += 1) {
+      await insertHistoryForNft(nftCollection, insertTx.nfts[i], insertTx);
+    }
+  }
 }
 
 async function parseNftUpdatePropertyDefinition(collection, sender, tx, events) {
@@ -142,7 +149,7 @@ async function parseNftUpdatePropertyDefinition(collection, sender, tx, events) 
   await insertHistoryForAccount(collection, txNft, sender);
 }
 
-async function parseNftUndelegate(collection, sender, contract, action, tx, events) {
+async function parseNftUndelegate(collection, nftCollection, sender, contract, action, tx, events) {
   // #2869599
   await parseEvents(events, (event) => {
     if (event.event === NftContract.UNDELEGATE_START) {
@@ -164,11 +171,12 @@ async function parseNftUndelegate(collection, sender, contract, action, tx, even
       txNft.nft = id;
 
       insertHistoryForAccount(collection, txNft, sender);
+      insertHistoryForNft(nftCollection, id, txNft);
     }
   });
 }
 
-async function parseNftCheckPendingUndelegations(collection, sender, contract, action, tx, events) {
+async function parseNftCheckPendingUndelegations(collection, nftCollection, sender, contract, action, tx, events) {
   // #2886309
   await parseEvents(events, (event) => {
     if (event.event === NftContract.UNDELEGATE_DONE) {
@@ -186,11 +194,14 @@ async function parseNftCheckPendingUndelegations(collection, sender, contract, a
       txNft.operation = `${contract}_undelegateDone`;
 
       insertHistoryForAccount(collection, txNft, sender);
+      for (let i = 0; i < ids.length; i += 1) {
+        insertHistoryForNft(nftCollection, ids[i], txNft);
+      }
     }
   });
 }
 
-async function parseNftContract(collection, sender, contract, action, tx, events, payloadObj) {
+async function parseNftContract(collection, nftCollection, sender, contract, action, tx, events, payloadObj) {
   switch (action) {
     case NftContract.TRANSFER:
     case NftContract.DELEGATE:
@@ -198,7 +209,7 @@ async function parseNftContract(collection, sender, contract, action, tx, events
     case NftContract.ISSUE_MULTIPLE:
     case NftContract.BURN:
       await parseTransferFeeOperations(collection, sender, contract, action, tx, events, payloadObj);
-      await parseTransferNftOperations(collection, tx, events);
+      await parseTransferNftOperations(collection, nftCollection, tx, events);
       break;
     case NftContract.SET_PROPERTIES:
     case NftContract.CREATE:
@@ -213,16 +224,16 @@ async function parseNftContract(collection, sender, contract, action, tx, events
     case NftContract.ENABLE_DELEGATION:
     case NftContract.SET_GROUP_BY:
       await parseTransferFeeOperations(collection, sender, contract, action, tx, events, payloadObj);
-      await parsePayloadNftOperation(collection, sender, contract, action, tx, payloadObj);
+      await parsePayloadNftOperation(collection, nftCollection, sender, contract, action, tx, payloadObj);
       break;
     case NftContract.UPDATE_PROPERTY_DEFINITION:
       await parseNftUpdatePropertyDefinition(collection, sender, tx, events);
       break;
     case NftContract.UNDELEGATE:
-      await parseNftUndelegate(collection, sender, contract, action, tx, events);
+      await parseNftUndelegate(collection, nftCollection, sender, contract, action, tx, events);
       break;
     case NftContract.CHECK_PENDING_UNDELEGATIONS:
-      await parseNftCheckPendingUndelegations(collection, sender, contract, action, tx, events);
+      await parseNftCheckPendingUndelegations(collection, nftCollection, sender, contract, action, tx, events);
       break;
     default:
       console.log(`Action ${action} is not implemented for 'nft' contract yet.`);

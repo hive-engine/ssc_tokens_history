@@ -32,8 +32,9 @@ https://accounts.hive-engine.com/accountHistory
 
 #### GET Parameters
 
-- `account`: a HIVE account (required)
+- `account`: a HIVE account or multiple HIVE accounts separated by a comma (required)
 - `symbol`: a Hive-Engine token symbol (optional)
+- `ops`: a comma separated list of operations e.g. `tokens_transfer` (optional)
 - `timestampStart`: a unix timestamp that represents the start of the dataset (optional)
 - `timestampEnd`: a unix timestamp that represents the end of the dataset (optional)
 - `limit`: number of records for the dataset (max is 500) (optional)
@@ -41,10 +42,10 @@ https://accounts.hive-engine.com/accountHistory
 
 #### Examples
 
-- `https://accounts.hive-engine.com/accountHistory?account=hive-eng`
-- `https://accounts.hive-engine.com/accountHistory?account=hive-eng&symbol=BEE`
-- `https://accounts.hive-engine.com/accountHistory?account=hive-eng&symbol=BEE&timestampStart=1554085536&timestampEnd=1564748055`
-- `https://accounts.hive-engine.com/accountHistory?account=hive-eng&symbol=BEE&timestampStart=1554085536&timestampEnd=1564748055&limit=1&offset=1`
+- `https://accounts.hive-engine.com/accountHistory?account=hive-engine`
+- `https://accounts.hive-engine.com/accountHistory?account=hive-engine&symbol=BEE`
+- `https://accounts.hive-engine.com/accountHistory?account=hive-engine&symbol=BEE&timestampStart=1554085536&timestampEnd=1564748055`
+- `https://accounts.hive-engine.com/accountHistory?account=hive-engine&symbol=BEE&timestampStart=1554085536&timestampEnd=1564748055&limit=1&offset=1`
 
 #### Available operations
 
@@ -160,3 +161,25 @@ https://accounts.hive-engine.com/marketHistory
 - `https://accounts.hive-engine.com/marketHistory?symbol=BEE`
 - `https://accounts.hive-engine.com/marketHistory?symbol=BEE&timestampStart=1554163200&timestampEnd=1554422400`
 
+
+### NFT History
+
+The `nftHistory` API is available under the endpoint:
+
+```
+https://accounts.hive-engine.com/nftHistory
+```
+
+#### GET Parameters
+
+- `nfts`: a comma separated list of nft ids (required if `accounts` is not present)
+- `accounts`: a comma separated list of HIVE accounts (required if `nfts` is not present)
+- `timestampStart`: a unix timestamp that represents the start of the dataset (optional)
+- `timestampEnd`: a unix timestamp that represents the end of the dataset (optional)
+- `limit`: number of records for the dataset (max is 500) (optional)
+- `offset`: offset for the dataset (required to browse a dataset that is bigger than 500 records) (optional)
+
+#### Examples
+
+- `https://accounts.hive-engine.com/nftHistory?nfts=19517`
+- `https://accounts.hive-engine.com/nftHistory?accounts=hive-engine`
