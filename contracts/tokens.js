@@ -41,7 +41,7 @@ async function parseTransferFeeOperation(collection, contract, action, tx, event
     const insertTx = {
       ...tx,
     };
-    insertTx.operation = `${contract}_${action}Fee`;
+    insertTx.operation = `${contract}_transferFee`;
     await parseTransferOperation(collection, insertTx, event, payloadObj);
   }
 }
