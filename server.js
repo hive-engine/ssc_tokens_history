@@ -105,6 +105,7 @@ nftHistoryRouter.get('/', async (req, res) => {
     const {
       nfts,
       accounts,
+      symbol,
       offset,
       limit,
       timestampStart,
@@ -130,7 +131,7 @@ nftHistoryRouter.get('/', async (req, res) => {
       if (nfts) {
         nftIds = nfts.split(',').map(nft => +nft);
       }
-
+      
       const innerMatch = [
         { $eq: ['$_id', '$$objId'] },
       ];
@@ -139,6 +140,12 @@ nftHistoryRouter.get('/', async (req, res) => {
         const accountsArray = accounts.split(',');
         innerMatch.push({
           $in: ['$account', accountsArray],
+        });
+      }
+
+      if (symbol && typeof symbol === 'string' && symbol.length > 0 && symbol.length <= 10) {
+        innerMatch.push({
+          $eq: ['$symbol', symbol],
         });
       }
 
