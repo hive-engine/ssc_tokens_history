@@ -131,40 +131,13 @@ nftHistoryRouter.get('/', async (req, res) => {
       if (nfts) {
         nftIds = nfts.split(',').map(nft => +nft);
       }
-      
-      const innerMatch = [
-        { $eq: ['$_id', '$$objId'] },
-      ];
-
-      if (accounts && accounts.length > 3) {
-        const accountsArray = accounts.split(',');
-        innerMatch.push({
-          $in: ['$account', accountsArray],
-        });
-      }
-
-      if (symbol && typeof symbol === 'string' && symbol.length > 0 && symbol.length <= 10) {
-        innerMatch.push({
-          $eq: ['$symbol', symbol],
-        });
-      }
 
       const mongoQuery = [
         {
           $lookup: {
             from: 'accountsHistory',
-            let: {
-              objId: '$accountHistoryId',
-            },
-            pipeline: [
-              {
-                $match: {
-                  $expr: {
-                    $and: innerMatch,
-                  },
-                },
-              },
-            ],
+            localField: 'accountHistoryId',
+            foreignField: '_id',
             as: 'fromItems',
           },
         },
@@ -191,15 +164,37 @@ nftHistoryRouter.get('/', async (req, res) => {
         },
       ];
 
+      const innerMatchQuery = [];
       if (nftIds) {
-        mongoQuery.unshift({
-          $match: {
-            nftId: {
-              $in: nftIds,
-            },
+        innerMatchQuery.push({
+          nftId: {
+            $in: nftIds,
           },
         });
       }
+
+      if (accounts && accounts.length > 3) {
+        const accountsArray = accounts.split(',');
+        innerMatchQuery.push({
+          account: {
+            $in: accountsArray,
+          },
+        });
+      }
+
+      if (symbol && typeof symbol === 'string' && symbol.length > 0 && symbol.length <= 10) {
+        innerMatchQuery.push({
+          symbol,
+        });
+      }
+
+      const matchQuery = {
+        $match: {
+          $and: innerMatchQuery,
+        },
+      };
+
+      mongoQuery.unshift(matchQuery);
 
       const sTimestampStart = parseInt(timestampStart, 10);
       const sTimestampEnd = parseInt(timestampEnd, 10);
