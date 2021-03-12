@@ -174,7 +174,7 @@ https://accounts.hive-engine.com/nftHistory
 
 - `nfts`: a comma separated list of nft ids (required if `accounts` is not present)
 - `accounts`: a comma separated list of HIVE accounts (required if `nfts` is not present)
-- `symbol`: a Hive-Engine token symbol (optional)
+- `symbol`: a NFT symbol (optional)
 - `timestampStart`: a unix timestamp that represents the start of the dataset (optional)
 - `timestampEnd`: a unix timestamp that represents the end of the dataset (optional)
 - `limit`: number of records for the dataset (max is 500) (optional)
