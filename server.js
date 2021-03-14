@@ -162,6 +162,15 @@ nftHistoryRouter.get('/', async (req, res) => {
             accountHistoryId: 0,
           },
         },
+        {
+          $skip: sOffset,
+        },
+        {
+          $limit: sLimit,
+        },
+        {
+          $sort: { timestamp: -1 },
+        },
       ];
 
       const innerMatchQuery = [];
@@ -188,14 +197,6 @@ nftHistoryRouter.get('/', async (req, res) => {
         });
       }
 
-      const matchQuery = {
-        $match: {
-          $and: innerMatchQuery,
-        },
-      };
-
-      mongoQuery.unshift(matchQuery);
-
       const sTimestampStart = parseInt(timestampStart, 10);
       const sTimestampEnd = parseInt(timestampEnd, 10);
 
@@ -204,16 +205,24 @@ nftHistoryRouter.get('/', async (req, res) => {
         && sTimestampStart <= sTimestampEnd
         && sTimestampStart > 0 && sTimestampStart < Number.MAX_SAFE_INTEGER
         && sTimestampEnd > 0 && sTimestampEnd < Number.MAX_SAFE_INTEGER) {
-        mongoQuery.timestamp = {
-          $gte: sTimestampStart,
-          $lte: sTimestampEnd,
-        };
+        innerMatchQuery.push({
+          timestamp: {
+            $gte: sTimestampStart,
+            $lte: sTimestampEnd,
+          },
+        });
       }
 
+      const matchQuery = {
+        $match: {
+          $and: innerMatchQuery,
+        },
+      };
+
+      mongoQuery.unshift(matchQuery);
+
       const result = await nftHistoryColl.aggregate(mongoQuery, {
-        limit: sLimit,
-        skip: sOffset,
-        sort: { timestamp: -1 },
+        allowDiskUse: true,
       }).toArray();
 
       return res.status(200).json(result);
