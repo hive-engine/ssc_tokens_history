@@ -70,6 +70,10 @@ https://accounts.hive-engine.com/accountHistory
 - `tokens_undelegateStart`: an undelegation was started
 - `tokens_undelegateDone`: an undelegation was completed
 
+For all actions which require a fee there will be an operation:
+
+- `tokens_transferFee`: fee for executing the action
+
 ##### Market contract
 
 - `market_cancel`: an order was canceled
@@ -122,12 +126,12 @@ https://accounts.hive-engine.com/accountHistory
 
 For all nft actions which require a fee there will be an operation:
 
-- `nft_*Fee`: fee for executing the action
+- `nft_transferFee`: fee for executing the action
 
 ##### Nftmarket contract
 
 - `nftmarket_buy`: an order was bought
-- `nftmarket_buyFee`: the fee of the buy order
+- `nftmarket_transferFee`: the fee of the buy order
 - `nftmarket_sell`: list a new order
 - `nftmarket_cancel`: cancel an order
 - `nftmarket_changePrice`: change the price of an order
