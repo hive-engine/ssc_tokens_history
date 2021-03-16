@@ -189,4 +189,3 @@ const init = async () => {
 
 
 module.exports.init = init;
-module.exports.parseBlock = parseBlock;

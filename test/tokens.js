@@ -1,13 +1,12 @@
 /* eslint-disable */
 const assert = require('assert');
 const { MongoClient } = require('mongodb');
-const { parseBlock } = require('../history_builder');
 const SSC = require('sscjs');
 
 
 const conf = {
   databaseURL: "mongodb://localhost:27017",
-  databaseName: "test_hsc_history",
+  databaseName: "hsc_history",
   node: "http://localhost:5000",
 };
 
@@ -24,7 +23,6 @@ describe('tokens', function () {
         useUnifiedTopology: true
       });
       db = await client.db(conf.databaseName);
-      await db.dropDatabase();
       resolve();
     })
       .then(() => {
@@ -45,9 +43,9 @@ describe('tokens', function () {
   beforeEach((done) => {
     new Promise(async (resolve) => {
       db = await client.db(conf.databaseName);
-      accountsHistory = await db.createCollection('accountsHistory');
-      nftHistory = await db.createCollection('nftHistory');
-      marketHistory = await db.createCollection('marketHistory');
+      accountsHistory = await db.collection('accountsHistory');
+      nftHistory = await db.collection('nftHistory');
+      marketHistory = await db.collection('marketHistory');
       resolve();
     })
       .then(() => {
@@ -58,7 +56,6 @@ describe('tokens', function () {
   afterEach((done) => {
     // runs after each test in this block
     new Promise(async (resolve) => {
-      await db.dropDatabase()
       resolve();
     })
       .then(() => {
@@ -67,9 +64,6 @@ describe('tokens', function () {
   });
 
   async function parseBlockAndFind(blockNumber) {
-    const block = await ssc.getBlockInfo(blockNumber);
-    await parseBlock(block, accountsHistory, nftHistory, marketHistory);
-
     return accountsHistory.find({ blockNumber: blockNumber })
       .toArray();
   }
