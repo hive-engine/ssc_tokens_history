@@ -132,7 +132,45 @@ nftHistoryRouter.get('/', async (req, res) => {
         nftIds = nfts.split(',').map(nft => +nft);
       }
 
+      // match nft ids
+      const matchQuery = {};
+      if (nftIds) {
+        matchQuery.nftId = {
+          $in: nftIds,
+        };
+      }
+
+      // match accounts
+      if (accounts && accounts.length > 3) {
+        const accountsArray = accounts.split(',');
+        matchQuery.account = {
+          $in: accountsArray,
+        };
+      }
+
+      // match symbol
+      if (symbol && typeof symbol === 'string' && symbol.length > 0 && symbol.length <= 10) {
+        matchQuery.symbol = symbol;
+      }
+
+      // match timestamp
+      const sTimestampStart = parseInt(timestampStart, 10);
+      const sTimestampEnd = parseInt(timestampEnd, 10);
+      // eslint-disable-next-line no-restricted-globals
+      if (!isNaN(sTimestampStart) && !isNaN(sTimestampEnd)
+        && sTimestampStart <= sTimestampEnd
+        && sTimestampStart > 0 && sTimestampStart < Number.MAX_SAFE_INTEGER
+        && sTimestampEnd > 0 && sTimestampEnd < Number.MAX_SAFE_INTEGER) {
+        matchQuery.timestamp = {
+          $gte: sTimestampStart,
+          $lte: sTimestampEnd,
+        };
+      }
+
       const mongoQuery = [
+        {
+          $match: matchQuery,
+        },
         {
           $lookup: {
             from: 'accountsHistory',
@@ -141,13 +179,7 @@ nftHistoryRouter.get('/', async (req, res) => {
             as: 'fromItems',
           },
         },
-        {
-          $match: {
-            fromItems: {
-              $exists: true, $not: { $size: 0 },
-            },
-          },
-        },
+        { $match: { fromItems: { $exists: true, $not: { $size: 0 } } } },
         {
           $replaceRoot: {
             newRoot: {
@@ -162,64 +194,10 @@ nftHistoryRouter.get('/', async (req, res) => {
             accountHistoryId: 0,
           },
         },
-        {
-          $skip: sOffset,
-        },
-        {
-          $limit: sLimit,
-        },
-        {
-          $sort: { timestamp: -1 },
-        },
+        { $skip: sOffset },
+        { $limit: sLimit },
+        { $sort: { timestamp: -1 } },
       ];
-
-      const innerMatchQuery = [];
-      if (nftIds) {
-        innerMatchQuery.push({
-          nftId: {
-            $in: nftIds,
-          },
-        });
-      }
-
-      if (accounts && accounts.length > 3) {
-        const accountsArray = accounts.split(',');
-        innerMatchQuery.push({
-          account: {
-            $in: accountsArray,
-          },
-        });
-      }
-
-      if (symbol && typeof symbol === 'string' && symbol.length > 0 && symbol.length <= 10) {
-        innerMatchQuery.push({
-          symbol,
-        });
-      }
-
-      const sTimestampStart = parseInt(timestampStart, 10);
-      const sTimestampEnd = parseInt(timestampEnd, 10);
-
-      // eslint-disable-next-line no-restricted-globals
-      if (!isNaN(sTimestampStart) && !isNaN(sTimestampEnd)
-        && sTimestampStart <= sTimestampEnd
-        && sTimestampStart > 0 && sTimestampStart < Number.MAX_SAFE_INTEGER
-        && sTimestampEnd > 0 && sTimestampEnd < Number.MAX_SAFE_INTEGER) {
-        innerMatchQuery.push({
-          timestamp: {
-            $gte: sTimestampStart,
-            $lte: sTimestampEnd,
-          },
-        });
-      }
-
-      const matchQuery = {
-        $match: {
-          $and: innerMatchQuery,
-        },
-      };
-
-      mongoQuery.unshift(matchQuery);
 
       const result = await nftHistoryColl.aggregate(mongoQuery, {
         allowDiskUse: true,
