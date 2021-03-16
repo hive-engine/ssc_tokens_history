@@ -20,6 +20,24 @@ You may also define token or nft symbols that should be ignored:
 
 which may be any of the available token or nft symbols.
 
+## Running the parser
+
+To run the parser for parsing the hsc run:
+
+`npm run start-parser`
+
+## Running the server
+
+For running the server run:
+
+`npm run start-server`
+
+## Running tests
+
+For running all tests run:
+
+`npm run test-all`
+
 ## API Usage
 
 ### Tokens History

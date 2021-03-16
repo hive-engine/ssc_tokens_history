@@ -1,9 +1,8 @@
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable no-await-in-loop */
-
+const nodeCleanup = require('node-cleanup');
 require('dotenv').config();
 const { MongoClient } = require('mongodb');
-const nodeCleanup = require('node-cleanup');
 const fs = require('fs-extra');
 const SSC = require('sscjs');
 const { Queue } = require('./libs/Queue');
@@ -60,7 +59,7 @@ function ignoreContract(contract) {
   }
 }
 
-async function parseTx(tx, blockNumber, dateTimestamp, finalTimestamp) {
+async function parseTx(tx, blockNumber, dateTimestamp, finalTimestamp, accountsHistory, nftHistory, marketHistory) {
   const {
     sender,
     contract,
@@ -86,33 +85,33 @@ async function parseTx(tx, blockNumber, dateTimestamp, finalTimestamp) {
   } else if (ignoreContract(contract)) {
     // ignore the given contract
   } else if (contract === Contracts.TOKENS) {
-    await parseTokensContract(accountsHistoryColl, sender, contract, action, finalTx, events, payloadObj);
+    await parseTokensContract(accountsHistory, sender, contract, action, finalTx, events, payloadObj);
   } else if (contract === Contracts.MARKET) {
-    await parseMarketContract(accountsHistoryColl, marketHistoryColl, sender, contract, action, finalTx, events, payloadObj, dateTimestamp);
+    await parseMarketContract(accountsHistory, marketHistory, sender, contract, action, finalTx, events, payloadObj, dateTimestamp);
   } else if (contract === Contracts.NFT) {
-    await parseNftContract(accountsHistoryColl, nftHistoryColl, sender, contract, action, finalTx, events, payloadObj);
+    await parseNftContract(accountsHistory, nftHistory, sender, contract, action, finalTx, events, payloadObj);
   } else if (contract === Contracts.WITNESSES) {
-    await parseWitnessesContract(accountsHistoryColl, action, finalTx, events, payloadObj);
+    await parseWitnessesContract(accountsHistory, action, finalTx, events, payloadObj);
   } else if (contract === Contracts.HIVE_PEGGED) {
-    await parseHivePeggedContract(accountsHistoryColl, action, finalTx, events, payloadObj);
+    await parseHivePeggedContract(accountsHistory, action, finalTx, events, payloadObj);
   } else if (contract === Contracts.NFT_MARKET) {
-    await parseNftMarketContract(accountsHistoryColl, nftHistoryColl, sender, contract, action, finalTx, events, payloadObj);
+    await parseNftMarketContract(accountsHistory, nftHistory, sender, contract, action, finalTx, events, payloadObj);
   } else if (contract === Contracts.MINING) {
-    await parseMiningContract(accountsHistoryColl, sender, contract, action, finalTx, events);
+    await parseMiningContract(accountsHistory, sender, contract, action, finalTx, events);
   } else if (contract === Contracts.BOT_CONTROLLER) {
-    await parseBotControllerContract(accountsHistoryColl, sender, contract, action, finalTx, events, payloadObj);
+    await parseBotControllerContract(accountsHistory, sender, contract, action, finalTx, events, payloadObj);
   } else if (contract === Contracts.MARKET_POOLS) {
-    await parseMarketPoolsContract(accountsHistoryColl, sender, contract, action, finalTx, events, payloadObj);
+    await parseMarketPoolsContract(accountsHistory, sender, contract, action, finalTx, events, payloadObj);
   } else if (contract === Contracts.INFLATION) {
-    await parseInflationContract(accountsHistoryColl, sender, contract, action, finalTx, events, payloadObj);
+    await parseInflationContract(accountsHistory, sender, contract, action, finalTx, events, payloadObj);
   } else if (contract === Contracts.CRITTER_MANAGER) {
-    await parseCritterManagerContract(accountsHistoryColl, sender, contract, action, finalTx, events, payloadObj);
+    await parseCritterManagerContract(accountsHistory, sender, contract, action, finalTx, events, payloadObj);
   } else {
     console.log(`Contract ${contract} is not implemented yet.`);
   }
 }
 
-async function parseBlock(block) {
+async function parseBlock(block, accountsHistory, nftHistory, marketHistory) {
   const {
     transactions,
     virtualTransactions,
@@ -130,10 +129,8 @@ async function parseBlock(block) {
   const allTransactions = transactions.concat(virtualTransactions);
   for (let index = 0; index < allTransactions.length; index += 1) {
     const tx = allTransactions[index];
-    await parseTx(tx, blockNumber, dateTimestamp, finalTimestamp);
+    await parseTx(tx, blockNumber, dateTimestamp, finalTimestamp, accountsHistory, nftHistory, marketHistory);
   }
-
-  lastSSCBlockParsed = blockNumber;
 }
 
 async function parseSSCChain(blockNumber) {
@@ -141,7 +138,8 @@ async function parseSSCChain(blockNumber) {
     const block = await ssc.getBlockInfo(blockNumber);
 
     if (block !== null) {
-      await parseBlock(block);
+      await parseBlock(block, accountsHistoryColl, nftHistoryColl, marketHistoryColl);
+      lastSSCBlockParsed = blockNumber;
 
       parseSSCChain(blockNumber + 1);
     } else {
@@ -177,16 +175,18 @@ const init = async () => {
 
     parseSSCChain(lastSSCBlockParsed);
   });
+
+  // graceful app closing
+  nodeCleanup((exitCode, signal) => { // eslint-disable-line no-unused-vars
+    client.close();
+    console.log('start saving conf'); // eslint-disable-line no-console
+    const conf = fs.readJSONSync('./config.json');
+    conf.lastSSCBlockParsed = lastSSCBlockParsed + 1;
+    fs.writeJSONSync('./config.json', conf, { spaces: 4 });
+    console.log('done saving conf'); // eslint-disable-line no-console
+  });
 };
 
-init();
 
-// graceful app closing
-nodeCleanup((exitCode, signal) => { // eslint-disable-line no-unused-vars
-  client.close();
-  console.log('start saving conf'); // eslint-disable-line no-console
-  const conf = fs.readJSONSync('./config.json');
-  conf.lastSSCBlockParsed = lastSSCBlockParsed + 1;
-  fs.writeJSONSync('./config.json', conf, { spaces: 4 });
-  console.log('done saving conf'); // eslint-disable-line no-console
-});
+module.exports.init = init;
+module.exports.parseBlock = parseBlock;

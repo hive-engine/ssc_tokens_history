@@ -4,7 +4,7 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "start-parser": "node history_builder.js",
+    "start-parser": "node parser.js",
     "start-server": "node server.js",
     "test-all": "./node_modules/mocha/bin/mocha  --recursive",
     "test-tokens": "./node_modules/mocha/bin/mocha  ./test/tokens.js"
