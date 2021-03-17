@@ -6,8 +6,7 @@
   "scripts": {
     "start-parser": "node parser.js",
     "start-server": "node server.js",
-    "test-all": "./node_modules/mocha/bin/mocha  --recursive",
-    "test-tokens": "./node_modules/mocha/bin/mocha  ./test/tokens.js"
+    "test-all": "./node_modules/mocha/bin/mocha  ./test/test.js"
   },
   "keywords": [],
   "author": "",
