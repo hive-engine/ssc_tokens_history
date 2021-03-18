@@ -110,29 +110,30 @@ describe('tokens', function () {
       });
   });
 
-  it('parse tokens_updateUrl', (done) => {
-    new Promise(async (resolve) => {
-      const txId = '5f0843e672868f3eb31b7c93fff0e8ea394f3267';
-      const block = await findTransaction(txId);
-      const tx = block[0];
-
-      // attributes tested below + 1 for object id
-      assert.strictEqual(Object.keys(tx).length, 8);
-
-      assert.strictEqual(tx.blockNumber, 17588);
-      assert.strictEqual(tx.transactionId, txId);
-      assert.strictEqual(tx.timestamp, 1587196275);
-      assert.strictEqual(tx.operation, 'tokens_transferToContract');
-      assert.strictEqual(tx.symbol, 'BEE');
-      assert.strictEqual(tx.newUrl, "");
-      assert.strictEqual(tx.account, 'cryptomancer');
-
-      resolve();
-    })
-      .then(() => {
-        done();
-      });
-  });
+  // it('parse tokens_updateUrl', (done) => {
+  //   new Promise(async (resolve) => {
+  //     // TODO
+  //     const txId = '5f0843e672868f3eb31b7c93fff0e8ea394f3267';
+  //     const block = await findTransaction(txId);
+  //     const tx = block[0];
+  //
+  //     // attributes tested below + 1 for object id
+  //     assert.strictEqual(Object.keys(tx).length, 8);
+  //
+  //     assert.strictEqual(tx.blockNumber, 17588);
+  //     assert.strictEqual(tx.transactionId, txId);
+  //     assert.strictEqual(tx.timestamp, 1587196275);
+  //     assert.strictEqual(tx.operation, 'tokens_transferToContract');
+  //     assert.strictEqual(tx.symbol, 'BEE');
+  //     assert.strictEqual(tx.newUrl, "");
+  //     assert.strictEqual(tx.account, 'cryptomancer');
+  //
+  //     resolve();
+  //   })
+  //     .then(() => {
+  //       done();
+  //     });
+  // });
 
   it('parse tokens_updateMetadata', (done) => {
     new Promise(async (resolve) => {
@@ -227,6 +228,8 @@ describe('tokens', function () {
       assert.strictEqual(tx.numberTransactions, 2);
       assert.strictEqual(tx.account, 'eonwarped');
 
+      // TODO add check for transferFee operation
+
       resolve();
     })
       .then(() => {
@@ -260,7 +263,31 @@ describe('tokens', function () {
       });
   });
 
-  it('parse tokens_unstake', (done) => {
+  it('parse tokens_unstakeStart', (done) => {
+    new Promise(async (resolve) => {
+      const txId = 'df21a5311af93b4440e7ecca6d59d2ac7c7845eb';
+      const block = await findTransaction(txId);
+      const tx = block[0];
+
+      // attributes tested below + 1 for object id
+      assert.strictEqual(Object.keys(tx).length, 8);
+
+      assert.strictEqual(tx.blockNumber, 456);
+      assert.strictEqual(tx.transactionId, txId);
+      assert.strictEqual(tx.timestamp, 1585948188);
+      assert.strictEqual(tx.operation, 'tokens_unstakeStart');
+      assert.strictEqual(tx.symbol, 'TEST.EON');
+      assert.strictEqual(tx.quantity, '10');
+      assert.strictEqual(tx.account, 'eonwarped');
+
+      resolve();
+    })
+      .then(() => {
+        done();
+      });
+  });
+
+  it('parse tokens_unstakeDone', (done) => {
     new Promise(async (resolve) => {
       const txId = '42428887-0';
       const block = await findTransaction(txId);
@@ -272,7 +299,7 @@ describe('tokens', function () {
       assert.strictEqual(tx.blockNumber, 3766);
       assert.strictEqual(tx.transactionId, txId);
       assert.strictEqual(tx.timestamp, 1586553069);
-      assert.strictEqual(tx.operation, 'tokens_unstake');
+      assert.strictEqual(tx.operation, 'tokens_unstakeDone');
       assert.strictEqual(tx.symbol, 'TEST.EON');
       assert.strictEqual(tx.quantity, '2.500');
       assert.strictEqual(tx.account, 'eonwarp');
@@ -325,6 +352,8 @@ describe('tokens', function () {
       assert.strictEqual(tx.symbol, 'TEST.EON');
       assert.strictEqual(tx.undelegationCooldown, 10);
       assert.strictEqual(tx.account, 'eonwarped');
+
+      // TODO add check for transferFee operation
 
       resolve();
     })
@@ -412,7 +441,7 @@ describe('tokens', function () {
 
   // it('parse tokens_transferFromContract', (done) => {
   //   new Promise(async (resolve) => {
-  //     // TODO none found?
+  //     // TODO
   //     resolve();
   //   })
   //     .then(() => {

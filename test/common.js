@@ -30,7 +30,7 @@ async function destroyDB() {
 }
 
 async function findTransaction(transactionId) {
-  return accountsHistory.find({ transactionId: transactionId })
+  return accountsHistory.find({ transactionId: transactionId }).sort({_id: 1})
     .toArray();
 }
 
