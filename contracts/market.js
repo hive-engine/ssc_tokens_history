@@ -25,7 +25,7 @@ async function insertMarketHistory(collection, dateTimestamp, symbol, event, nex
     metric = {
       timestamp: dateTimestamp,
       symbol,
-      volumeSteem: nextEvent.data.quantity,
+      volumeHive: nextEvent.data.quantity,
       volumeToken: event.data.quantity,
       lowestPrice: price,
       highestPrice: price,
@@ -35,7 +35,7 @@ async function insertMarketHistory(collection, dateTimestamp, symbol, event, nex
 
     await collection.insertOne(metric);
   } else {
-    metric.volumeSteem = BigNumber(metric.volumeSteem)
+    metric.volumeHive = BigNumber(metric.volumeHive)
       .plus(nextEvent.data.quantity)
       .toFixed(8);
 
@@ -63,17 +63,18 @@ async function insertMarketHistory(collection, dateTimestamp, symbol, event, nex
 async function parseMarketTransferOperations(collection, marketCollection, sender, contract, action, tx, events, payloadObj, dateTimestamp) {
   const symbolTrades = payloadObj.symbol;
   let firstTransferIndex = -1;
-  await parseEvents(events, (event, idx) => {
+  await parseEvents(events, async (event, idx) => {
     const insertTx = {
       ...tx,
     };
     let eventSender = sender;
-    insertTx.symbol = event.data.symbol;
+    insertTx.symbol = symbolTrades;
     if (action === MarketContract.CANCEL) {
       eventSender = event.data.to;
       insertTx.orderType = payloadObj.type;
       insertTx.orderID = payloadObj.id;
       insertTx.quantityReturned = event.data.quantity;
+      insertTx.symbol = event.data.symbol;
 
       // TODO: get the initial tx and get the price set or this order to update market metrics
     } else if (action === MarketContract.BUY || action === MarketContract.MARKET_BUY || action === MarketContract.SELL || action === MarketContract.MARKET_SELL) {
@@ -84,11 +85,12 @@ async function parseMarketTransferOperations(collection, marketCollection, sende
         insertTx.quantityLocked = event.data.quantity;
       } else if (event.event === MarketContract.ORDER_EXPIRED) {
         // ignore this event
+        return;
       } else if (event.event === TokensContract.TRANSFER_FROM_CONTRACT) {
         eventSender = event.data.to;
         if (idx + 1 < events.length && events[idx + 1].event === MarketContract.ORDER_EXPIRED) {
           insertTx.operation = `${contract}_expire`;
-          insertTx.orderId = events[idx + 1].data.txId;
+          insertTx.orderID = events[idx + 1].data.txId;
           if (action === MarketContract.BUY || action === MarketContract.MARKET_BUY) {
             insertTx.orderType = 'sell';
           } else {
@@ -113,23 +115,23 @@ async function parseMarketTransferOperations(collection, marketCollection, sende
               } else {
                 insertTx.operation = `${contract}_sellRemaining`;
               }
-              parseTransferOperation(collection, tx, event, payloadObj);
+              insertTx.symbol = event.data.symbol;
+              await parseTransferOperation(collection, insertTx, event, payloadObj);
 
               firstTransferIndex = idx + 1;
-            } else {
-              insertTx.operation = `${contract}_buy`;
-              insertTx.from = events[idx + 1].data.to;
-              insertTx.quantityTokens = event.data.quantity;
-              insertTx.quantitySteem = events[idx + 1].data.quantity;
-
-              insertMarketHistory(marketCollection, dateTimestamp, event.data.symbol, event, events[idx + 1]);
+              return;
             }
+            insertTx.operation = `${contract}_buy`;
+            insertTx.from = events[idx + 1].data.to;
+            insertTx.quantityTokens = event.data.quantity;
+            insertTx.quantityHive = events[idx + 1].data.quantity;
+
+            await insertMarketHistory(marketCollection, dateTimestamp, event.data.symbol, event, events[idx + 1]);
           } else {
             insertTx.operation = `${contract}_sell`;
             insertTx.to = events[idx - 1].data.to;
             insertTx.quantityTokens = events[idx - 1].data.quantity;
-            insertTx.quantitySteem = event.data.quantity;
-            insertTx.symbol = events[idx - 1].data.symbol;
+            insertTx.quantityHive = event.data.quantity;
           }
         }
       } else if (event.event === MarketContract.ORDER_CLOSED) {
@@ -139,7 +141,7 @@ async function parseMarketTransferOperations(collection, marketCollection, sende
         insertTx.orderType = event.data.type;
       }
     }
-    insertHistoryForAccount(collection, insertTx, eventSender);
+    await insertHistoryForAccount(collection, insertTx, eventSender);
   });
 }
 

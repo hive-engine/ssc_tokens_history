@@ -39,7 +39,7 @@ async function parseTransferNftOperation(collection, nftCollection, tx, logEvent
 }
 
 async function parseTransferNftOperations(collection, nftCollection, tx, events) {
-  await parseEvents(events, (e) => {
+  await parseEvents(events, async (e) => {
     const event = e;
     const insertTx = {
       ...tx,
@@ -58,7 +58,7 @@ async function parseTransferNftOperations(collection, nftCollection, tx, events)
         event.data.to = 'null';
         event.data.toType = 'u';
       }
-      parseTransferNftOperation(collection, nftCollection, insertTx, event);
+      await parseTransferNftOperation(collection, nftCollection, insertTx, event);
     }
   });
 }
@@ -151,7 +151,7 @@ async function parseNftUpdatePropertyDefinition(collection, sender, tx, events) 
 
 async function parseNftUndelegate(collection, nftCollection, sender, contract, action, tx, events) {
   // #2869599
-  await parseEvents(events, (event) => {
+  await parseEvents(events, async (event) => {
     if (event.event === NftContract.UNDELEGATE_START) {
       const txNft = {
         ...tx,
@@ -170,15 +170,15 @@ async function parseNftUndelegate(collection, nftCollection, sender, contract, a
       txNft.from = finalFrom;
       txNft.nft = id;
 
-      insertHistoryForAccount(collection, txNft, sender);
-      insertHistoryForNft(nftCollection, id, txNft);
+      await insertHistoryForAccount(collection, txNft, sender);
+      await insertHistoryForNft(nftCollection, id, txNft);
     }
   });
 }
 
 async function parseNftCheckPendingUndelegations(collection, nftCollection, sender, contract, action, tx, events) {
   // #2886309
-  await parseEvents(events, (event) => {
+  await parseEvents(events, async (event) => {
     if (event.event === NftContract.UNDELEGATE_DONE) {
       const txNft = {
         ...tx,
@@ -193,9 +193,9 @@ async function parseNftCheckPendingUndelegations(collection, nftCollection, send
       txNft.nfts = ids;
       txNft.operation = `${contract}_undelegateDone`;
 
-      insertHistoryForAccount(collection, txNft, sender);
+      await insertHistoryForAccount(collection, txNft, sender);
       for (let i = 0; i < ids.length; i += 1) {
-        insertHistoryForNft(nftCollection, ids[i], txNft);
+        await insertHistoryForNft(nftCollection, ids[i], txNft);
       }
     }
   });

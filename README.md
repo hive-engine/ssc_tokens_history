@@ -98,7 +98,9 @@ For all actions which require a fee there will be an operation:
 - `market_placeOrder`: an order was placed
 - `market_expire`: an order expired
 - `market_buy`: tokens were bought
+- `market_buyRemaining`: transfer of remaining tokens
 - `market_sell`: tokens were sold
+- `market_sellRemaining': transfer of remaining tokens
 - `market_close`: an order was closed
 
 

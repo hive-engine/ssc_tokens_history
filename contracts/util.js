@@ -45,7 +45,7 @@ async function insertHistoryForAccounts(collection, tx, accounts) {
 async function parseEvents(events, eventCallback) {
   if (events) {
     for (let idx = 0; idx < events.length; idx += 1) {
-      eventCallback(events[idx], idx);
+      await eventCallback(events[idx], idx);
     }
   }
 }

@@ -47,18 +47,18 @@ async function parseTransferFeeOperation(collection, contract, action, tx, event
 }
 
 async function parseTransferFeeOperations(collection, contract, action, tx, events, payloadObj) {
-  await parseEvents(events, (event) => {
-    parseTransferFeeOperation(collection, contract, action, tx, event, payloadObj);
+  await parseEvents(events, async (event) => {
+    await parseTransferFeeOperation(collection, contract, action, tx, event, payloadObj);
   });
 }
 
 async function parseTransferOperations(collection, tx, events, payloadObj) {
-  await parseEvents(events, (event) => {
+  await parseEvents(events, async (event) => {
     if (event.contract === Contracts.TOKENS) {
       const insertTx = {
         ...tx,
       };
-      parseTransferOperation(collection, insertTx, event, payloadObj);
+      await parseTransferOperation(collection, insertTx, event, payloadObj);
     }
   });
 }
