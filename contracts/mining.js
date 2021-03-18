@@ -32,7 +32,7 @@ async function parseLotteryOperation(collection, sender, contract, action, tx, e
 async function parseMiningContract(collection, sender, contract, action, tx, events) {
   switch (action) {
     case MiningContract.CHECK_PENDING_LOTTERIES:
-      await parseLotteryOperation(sender, contract, action, tx, events);
+      await parseLotteryOperation(collection, sender, contract, action, tx, events);
       break;
     case MiningContract.CREATE_POOL:
       // TODO implement action #2329024

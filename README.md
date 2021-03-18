@@ -82,8 +82,8 @@ https://accounts.hive-engine.com/accountHistory
 - `tokens_enableDelegation`: delegation was enabled for a token
 - `tokens_stake`: tokens were staked
 - `tokens_unstakeStart`: an unstake was started
+- `tokens_unstakeDone`: tokens were unstaked
 - `tokens_cancelUnstake`: an unstake was canceled
-- `tokens_unstake`: tokens were unstaked
 - `tokens_delegate`: tokens were delegated
 - `tokens_undelegateStart`: an undelegation was started
 - `tokens_undelegateDone`: an undelegation was completed

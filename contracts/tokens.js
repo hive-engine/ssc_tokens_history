@@ -99,7 +99,7 @@ async function parseStakeDelegateOperations(collection, sender, contract, action
         break;
       case TokensContract.CHECK_PENDING_UNSTAKES:
         accounts = [logEvent.account];
-        insertTx.operation = `${contract}_unstake`;
+        insertTx.operation = `${contract}_unstakeDone`;
         insertTx.quantity = logEvent.quantity;
         break;
       case TokensContract.CHECK_PENDING_UNDELEGATIONS:
