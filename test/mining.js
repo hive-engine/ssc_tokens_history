@@ -5,8 +5,7 @@ const { findTransaction } = require('./common');
 
 describe('mining', function () {
 
-  it('parse mining_lottery', (done) => {
-    new Promise(async (resolve) => {
+  it('parse mining_lottery', async () => {
       const txId = '47888813-4';
       const block = await findTransaction(txId);
       const tx = block[0];
@@ -23,11 +22,6 @@ describe('mining', function () {
       assert.strictEqual(tx.quantity, '1.500');
       assert.strictEqual(tx.account, 'badpupper');
 
-      resolve();
-    })
-      .then(() => {
-        done();
-      });
   });
 
 });

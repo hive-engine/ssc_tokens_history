@@ -5,8 +5,7 @@ const { findTransaction } = require('./common');
 
 describe('hivepegged', function () {
 
-  it('parse hivepegged_buy', (done) => {
-    new Promise(async (resolve) => {
+  it('parse hivepegged_buy', async () => {
       const txId = '3398782dae26b26a00c6a2784bbbce10d3112435';
       const block = await findTransaction(txId);
       const tx = block[0];
@@ -25,15 +24,9 @@ describe('hivepegged', function () {
       assert.strictEqual(tx.memo, null);
       assert.strictEqual(tx.account, 'honey-swap');
 
-      resolve();
-    })
-      .then(() => {
-        done();
-      });
   });
 
-  it('parse hivepegged_withdraw', (done) => {
-    new Promise(async (resolve) => {
+  it('parse hivepegged_withdraw', async () => {
       const txId = '506741cafd0d57f4907ca76ac3157f2449aa0f01';
       const block = await findTransaction(txId);
       const tx = block[0];
@@ -52,11 +45,6 @@ describe('hivepegged', function () {
       assert.strictEqual(tx.memo, null);
       assert.strictEqual(tx.account, 'steemsc');
 
-      resolve();
-    })
-      .then(() => {
-        done();
-      });
   });
 
 });

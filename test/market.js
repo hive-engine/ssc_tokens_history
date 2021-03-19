@@ -5,8 +5,7 @@ const { findTransaction } = require('./common');
 
 describe('market', function () {
 
-  it('parse market_cancel', (done) => {
-    new Promise(async (resolve) => {
+  it('parse market_cancel', async () => {
       const txId = '6aeb05dea1449479730a0983b4208542d4c34024';
       const block = await findTransaction(txId);
       const tx = block[0];
@@ -24,15 +23,9 @@ describe('market', function () {
       assert.strictEqual(tx.quantityReturned, '0.00000001');
       assert.strictEqual(tx.account, 'steemsc');
 
-      resolve();
-    })
-      .then(() => {
-        done();
-      });
   });
 
-  it('parse market_buy', (done) => {
-    new Promise(async (resolve) => {
+  it('parse market_buy', async () => {
       const txId = 'c4dbf635d0b322481e9ade3989413fe740f0fb65';
       const block = await findTransaction(txId);
 
@@ -78,16 +71,9 @@ describe('market', function () {
       assert.strictEqual(closeOrder.orderType, 'buy');
       assert.strictEqual(closeOrder.account, 'neoxian');
 
-      resolve();
-    })
-      .then(() => {
-        done();
-      });
   });
 
-  it('parse market_sell', (done) => {
-    new Promise(async (resolve) => {
-      // TODO expire, buyRemaining, sellRemaining
+  it('parse market_sell', async () => {
       const txId = 'be0a5d68ce3c944efba984e8e82aa600db70bf70';
       const block = await findTransaction(txId);
 
@@ -133,15 +119,9 @@ describe('market', function () {
       assert.strictEqual(closeOrder.orderType, 'sell');
       assert.strictEqual(closeOrder.account, 'kork75');
 
-      resolve();
-    })
-      .then(() => {
-        done();
-      });
   });
 
-  it('parse market_expire', (done) => {
-    new Promise(async (resolve) => {
+  it('parse market_expire', async () => {
       const txId = '1284a72f1b4dddcf1ea45574851f430c98fbb32f';
       const block = await findTransaction(txId);
 
@@ -170,15 +150,9 @@ describe('market', function () {
       assert.strictEqual(expireOrder.quantityUnlocked, '1.00000000');
       assert.strictEqual(expireOrder.account, 'eirik');
 
-      resolve();
-    })
-      .then(() => {
-        done();
-      });
   });
 
-  it('parse market_buyRemaining', (done) => {
-    new Promise(async (resolve) => {
+  it('parse market_buyRemaining', async () => {
       // TODO sellRemaining
       const txId = '29da2c6b1bb616ed06bf4c0609fd2a31e74206d1';
       const block = await findTransaction(txId);
@@ -200,11 +174,6 @@ describe('market', function () {
       assert.strictEqual(remainingTx.memo, null);
       assert.strictEqual(remainingTx.account, 'contract_market');
 
-      resolve();
-    })
-      .then(() => {
-        done();
-      });
   });
 
 });

@@ -1,5 +1,6 @@
 /* eslint-disable */
 const { MongoClient } = require('mongodb');
+require('dotenv').config();
 
 
 let client;
@@ -9,17 +10,13 @@ let accountsHistory;
 let nftHistory;
 let marketHistory;
 
-const conf = {
-  databaseURL: 'mongodb://localhost:27017',
-  databaseName: 'hsc_history',
-};
 
 async function setupDB() {
-  client = await MongoClient.connect(conf.databaseURL, {
+  client = await MongoClient.connect(process.env.DATABASE_URL, {
     useNewUrlParser: true,
     useUnifiedTopology: true
   });
-  db = await client.db(conf.databaseName);
+  db = await client.db(process.env.DATABASE_NAME);
   accountsHistory = await db.collection('accountsHistory');
   nftHistory = await db.collection('nftHistory');
   marketHistory = await db.collection('marketHistory');
