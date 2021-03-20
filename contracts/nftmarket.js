@@ -127,6 +127,9 @@ async function parseNftBuy(collection, nftCollection, sender, contract, action, 
           insertTxSell.operation = `${contract}_sell`;
 
           await insertHistoryForAccount(collection, insertTxBuy, account);
+          for (let j = 0; j < sellerNftIds.length; j += 1) {
+            await insertHistoryForNft(nftCollection, sellerNftIds[j], insertTxBuy);
+          }
           await insertHistoryForAccount(collection, insertTxSell, sellerAccount);
           for (let j = 0; j < sellerNftIds.length; j += 1) {
             await insertHistoryForNft(nftCollection, sellerNftIds[j], insertTxSell);

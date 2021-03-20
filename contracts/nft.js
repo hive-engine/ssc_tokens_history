@@ -34,8 +34,12 @@ async function parseTransferNftOperation(collection, nftCollection, tx, logEvent
   insertTx.symbol = symbol;
   insertTx.nft = id;
 
-  await insertHistoryForAccounts(collection, insertTx, [finalFrom, finalTo]);
+  await insertHistoryForAccount(collection, insertTx, finalFrom);
   await insertHistoryForNft(nftCollection, id, insertTx);
+  if (finalFrom !== finalTo) {
+    await insertHistoryForAccount(collection, insertTx, finalTo);
+    await insertHistoryForNft(nftCollection, id, insertTx);
+  }
 }
 
 async function parseTransferNftOperations(collection, nftCollection, tx, events) {
@@ -150,7 +154,6 @@ async function parseNftUpdatePropertyDefinition(collection, sender, tx, events) 
 }
 
 async function parseNftUndelegate(collection, nftCollection, sender, contract, action, tx, events) {
-  // #2869599
   await parseEvents(events, async (event) => {
     if (event.event === NftContract.UNDELEGATE_START) {
       const txNft = {
@@ -177,7 +180,6 @@ async function parseNftUndelegate(collection, nftCollection, sender, contract, a
 }
 
 async function parseNftCheckPendingUndelegations(collection, nftCollection, sender, contract, action, tx, events) {
-  // #2886309
   await parseEvents(events, async (event) => {
     if (event.event === NftContract.UNDELEGATE_DONE) {
       const txNft = {
