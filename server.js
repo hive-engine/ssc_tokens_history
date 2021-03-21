@@ -80,9 +80,9 @@ historyRouter.get('/', async (req, res) => {
       }
 
       const result = await accountsHistoryColl.find(mongoQuery, {
-        limit: sLimit,
-        skip: sOffset,
         sort: { timestamp: -1 },
+        skip: sOffset,
+        limit: sLimit,
       }).toArray();
 
       return res.status(200).json(result);
@@ -171,10 +171,11 @@ nftHistoryRouter.get('/', async (req, res) => {
         {
           $match: matchQuery,
         },
+        { $group: { _id: '$accountHistoryId' } },
         {
           $lookup: {
             from: 'accountsHistory',
-            localField: 'accountHistoryId',
+            localField: '_id',
             foreignField: '_id',
             as: 'fromItems',
           },
@@ -190,13 +191,11 @@ nftHistoryRouter.get('/', async (req, res) => {
         {
           $project: {
             fromItems: 0,
-            nftId: 0,
-            accountHistoryId: 0,
           },
         },
+        { $sort: { timestamp: -1 } },
         { $skip: sOffset },
         { $limit: sLimit },
-        { $sort: { timestamp: -1 } },
       ];
 
       const result = await nftHistoryColl.aggregate(mongoQuery, {
@@ -246,8 +245,8 @@ marketRouter.get('/', async (req, res) => {
       }
 
       const result = await marketHistoryColl.find(mongoQuery, {
-        limit: 500,
         sort: { timestamp: -1 },
+        limit: 500,
       }).toArray();
 
       return res.status(200).json(result);

@@ -77,10 +77,11 @@ async function parseNftBuy(collection, nftCollection, sender, contract, action, 
   await parseEvents(events, async (event) => {
     if (event.contract === Contracts.NFT) {
       if (event.event === NftContract.TRANSFER) {
-        const insertTx = {
-          ...tx,
-        };
-        await parseTransferNftOperation(collection, nftCollection, insertTx, event, payloadObj);
+        // do not insert the transfer operation
+        // const insertTx = {
+        //   ...tx,
+        // };
+        // await parseTransferNftOperation(collection, nftCollection, insertTx, event, payloadObj);
       }
     } else if (event.contract === Contracts.NFT_MARKET) {
       if (event.event === NftMarketContract.HIT_SELL_ORDER) {
@@ -144,7 +145,8 @@ async function parseNftSellAndCancel(collection, nftCollection, sender, contract
   await parseEvents(events, async (event) => {
     if (event.contract === Contracts.NFT) {
       if (event.event === NftContract.TRANSFER) {
-        await parseTransferNftOperation(collection, nftCollection, tx, event, payloadObj);
+        // do not insert the transfer operation
+        // await parseTransferNftOperation(collection, nftCollection, tx, event, payloadObj);
       }
     } else if (event.contract === Contracts.NFT_MARKET) {
       if (event.event === NftMarketContract.SELL_ORDER || event.event === NftMarketContract.CANCEL_ORDER) {
