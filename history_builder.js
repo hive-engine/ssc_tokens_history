@@ -171,6 +171,33 @@ const init = async () => {
       accountsHistoryColl = collection;
       nftHistoryColl = db.collection('nftHistory');
       marketHistoryColl = db.collection('marketHistory');
+
+      // rollback if txs of the @lastSSCBlockParsed block have already been written
+      console.log(`Starting rollback for block ${lastSSCBlockParsed}.`);
+      const block = await ssc.getBlockInfo(lastSSCBlockParsed);
+      if (block) {
+        const { timestamp } = block;
+
+        const blockDate = new Date(`${timestamp}.000Z`);
+        const finalTimestamp = blockDate.getTime() / 1000;
+
+        await accountsHistoryColl.deleteMany({
+          timestamp: {
+            $gte: finalTimestamp,
+          },
+        });
+        await nftHistoryColl.deleteMany({
+          timestamp: {
+            $gte: finalTimestamp,
+          },
+        });
+        await marketHistoryColl.deleteMany({
+          timestamp: {
+            $gte: finalTimestamp,
+          },
+        });
+        console.log(`Finished rollback with timestamp >= ${finalTimestamp}.`);
+      }
     }
 
     parseSSCChain(lastSSCBlockParsed);
