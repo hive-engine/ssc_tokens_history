@@ -129,7 +129,7 @@ nftHistoryRouter.get('/', async (req, res) => {
     if ((nfts && nfts.length > 0) || (accounts && accounts.length >= 3)) {
       let nftIds = null;
       if (nfts) {
-        nftIds = nfts.split(',').map(nft => +nft);
+        nftIds = nfts.split(',');
       }
 
       // match nft ids

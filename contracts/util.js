@@ -18,7 +18,7 @@ async function insertHistoryForAccount(collection, tx, account) {
 
 async function insertHistoryForNft(collection, nftId, otherTx) {
   const nftTx = {
-    nftId,
+    nftId: `${nftId}`,
     symbol: otherTx.symbol,
     account: otherTx.account,
     timestamp: otherTx.timestamp,

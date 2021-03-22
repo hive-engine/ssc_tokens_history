@@ -162,11 +162,14 @@ const init = async () => {
       accountsHistoryColl = await db.createCollection('accountsHistory');
       await accountsHistoryColl.createIndex({ account: 1, symbol: 1, operation: 1, timestamp: -1 });
       await accountsHistoryColl.createIndex({ transactionId: 1 });
+      await accountsHistoryColl.createIndex({ timestamp: -1 });
       nftHistoryColl = await db.createCollection('nftHistory');
       await nftHistoryColl.createIndex({ nftId: 1, account: 1, symbol: 1, timestamp: -1 });
       await nftHistoryColl.createIndex({ account: 1, symbol: 1, timestamp: -1 });
+      await nftHistoryColl.createIndex({ timestamp: -1 });
       marketHistoryColl = await db.createCollection('marketHistory');
       await marketHistoryColl.createIndex({ symbol: 1, timestamp: -1 });
+      await marketHistoryColl.createIndex({ timestamp: -1 });
     } else {
       accountsHistoryColl = collection;
       nftHistoryColl = db.collection('nftHistory');
