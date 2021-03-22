@@ -36,9 +36,13 @@ async function parseTransferNftOperation(collection, nftCollection, tx, logEvent
 
   await insertHistoryForAccount(collection, insertTx, finalFrom);
   await insertHistoryForNft(nftCollection, id, insertTx);
+
+  // quick fix until account history is restructured to two separate collections that only
+  // reference the collection by id similary as for the nftHistory
+  insertTx.account = finalTo;
+  await insertHistoryForNft(nftCollection, id, insertTx);
   if (finalFrom !== finalTo) {
     await insertHistoryForAccount(collection, insertTx, finalTo);
-    await insertHistoryForNft(nftCollection, id, insertTx);
   }
 }
 
