@@ -2,9 +2,11 @@
   "name": "ssc_account_history",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start-parser": "node parser.js",
+    "start-server": "node server.js",
+    "test-all": "./node_modules/mocha/bin/mocha  ./test/test.js"
   },
   "keywords": [],
   "author": "",
@@ -26,6 +28,7 @@
     "eslint-config-airbnb": "^17.1.0",
     "eslint-plugin-import": "^2.14.0",
     "eslint-plugin-jsx-a11y": "^6.1.2",
-    "eslint-plugin-react": "^7.11.1"
+    "eslint-plugin-react": "^7.11.1",
+    "mocha": "^8.3.2"
   }
 }
