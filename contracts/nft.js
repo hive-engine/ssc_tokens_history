@@ -214,7 +214,7 @@ async function parseNftContract(collection, nftCollection, sender, contract, act
     case NftContract.ISSUE:
     case NftContract.ISSUE_MULTIPLE:
     case NftContract.BURN:
-      await parseTransferFeeOperations(collection, sender, contract, action, tx, events, payloadObj);
+      await parseTransferFeeOperations(collection, contract, action, tx, events, payloadObj);
       await parseTransferNftOperations(collection, nftCollection, tx, events);
       break;
     case NftContract.SET_PROPERTIES:
@@ -229,7 +229,7 @@ async function parseNftContract(collection, nftCollection, sender, contract, act
     case NftContract.SET_PROPERTY_PERMISSIONS:
     case NftContract.ENABLE_DELEGATION:
     case NftContract.SET_GROUP_BY:
-      await parseTransferFeeOperations(collection, sender, contract, action, tx, events, payloadObj);
+      await parseTransferFeeOperations(collection, contract, action, tx, events, payloadObj);
       await parsePayloadNftOperation(collection, nftCollection, sender, contract, action, tx, payloadObj);
       break;
     case NftContract.UPDATE_PROPERTY_DEFINITION:
