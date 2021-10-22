@@ -139,6 +139,8 @@ async function parseMarketTransferOperations(collection, marketCollection, sende
         insertTx.operation = `${contract}_closeOrder`;
         insertTx.orderID = event.data.txId;
         insertTx.orderType = event.data.type;
+        
+        firstTransferIndex = -1;
       }
     }
     await insertHistoryForAccount(collection, insertTx, eventSender);
