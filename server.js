@@ -20,8 +20,11 @@ const historyRouter = express.Router();
 const nftHistoryRouter = express.Router();
 const marketRouter = express.Router();
 
+const pid = process.env.NODE_APP_INSTANCE;
+
 historyRouter.get('/', async (req, res) => {
   try {
+    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     const { query } = req;
     const {
       account,
@@ -32,6 +35,8 @@ historyRouter.get('/', async (req, res) => {
       timestampStart,
       timestampEnd,
     } = query;
+
+    console.log(`[${pid}] got request: ${JSON.stringify(query)} with IP ${ip}`);
 
     let sOffset = parseInt(offset, 10);
     if (isNaN(sOffset)) { // eslint-disable-line no-restricted-globals
@@ -101,6 +106,7 @@ historyRouter.get('/', async (req, res) => {
 
 nftHistoryRouter.get('/', async (req, res) => {
   try {
+    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     const { query } = req;
     const {
       nfts,
@@ -111,6 +117,8 @@ nftHistoryRouter.get('/', async (req, res) => {
       timestampStart,
       timestampEnd,
     } = query;
+
+    console.log(`[${pid}] got nft request: ${JSON.stringify(query)} with IP ${ip}`);
 
     let sOffset = parseInt(offset, 10);
     if (isNaN(sOffset)) { // eslint-disable-line no-restricted-globals
@@ -218,12 +226,15 @@ nftHistoryRouter.get('/', async (req, res) => {
 
 marketRouter.get('/', async (req, res) => {
   try {
+    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     const { query } = req;
     const {
       symbol,
       timestampStart,
       timestampEnd,
     } = query;
+
+    console.log(`[${pid}] got market request: ${JSON.stringify(query)} with IP ${ip}`);
 
     if (symbol && typeof symbol === 'string' && symbol.length > 0 && symbol.length <= 10) {
       const mongoQuery = {
@@ -286,9 +297,11 @@ const init = async () => {
   });
 };
 
+console.log(`[${pid}] starting up...`);
 init();
 
 // graceful app closing
 nodeCleanup((exitCode, signal) => { // eslint-disable-line no-unused-vars
+  console.log(`[${pid}] shutting down...`);
   client.close();
 });

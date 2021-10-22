@@ -107,7 +107,7 @@ async function parseTx(tx, blockNumber, dateTimestamp, finalTimestamp, accountsH
   } else if (contract === Contracts.CRITTER_MANAGER) {
     await parseCritterManagerContract(accountsHistory, sender, contract, action, finalTx, events, payloadObj);
   } else {
-    console.log(`Contract ${contract} is not implemented yet.`);
+    ; //console.log(`Contract ${contract} is not implemented yet.`);
   }
 }
 
