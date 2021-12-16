@@ -2,7 +2,7 @@
     "nodes": [
         "https://api.hive-engine.com/rpc"
     ],
-    "lastSSCBlockParsed": 0,
+    "lastSSCBlockParsed": 13047304,
     "port": 3000,
     "pollingTime": 1000,
     "ignoreContracts": [],

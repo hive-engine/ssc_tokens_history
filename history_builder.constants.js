@@ -5,6 +5,7 @@ const Contracts = {
   AIRDROPS: 'airdrops',
   BOT_CONTROLLER: 'botcontroller',
   CLAIMDROPS: 'claimdrops',
+  COMMENTS: 'comments',
   CONTRACT: 'contract',
   CRITTER_MANAGER: 'crittermanager',
   DICE: 'dice',
@@ -45,6 +46,7 @@ const TokensContract = {
   CREATE: 'create',
   ENABLE_STAKING: 'enableStaking',
   STAKE: 'stake',
+  STAKE_FROM_CONTRACT: 'stakeFromContract',
   UNSTAKE: 'unstake',
   CANCEL_UNSTAKE: 'cancelUnstake',
   ENABLE_DELEGATION: 'enableDelegation',
@@ -53,6 +55,7 @@ const TokensContract = {
   CHECK_PENDING_UNSTAKES: 'checkPendingUnstakes',
   CHECK_PENDING_UNDELEGATIONS: 'checkPendingUndelegations',
   UPDATE_PARAMS: 'updateParams',
+  ISSUE_TO_CONTRACT: 'issueToContract',
 };
 
 const WitnessesContract = {

@@ -12,7 +12,9 @@ const {
 
 
 async function parseTransferOperation(collection, tx, logEvent, payloadObj) {
-  const insertTx = tx;
+  const insertTx = {
+      ...tx
+  };
   const {
     from,
     to,
@@ -20,17 +22,19 @@ async function parseTransferOperation(collection, tx, logEvent, payloadObj) {
     quantity,
   } = logEvent.data;
 
-  const finalFrom = logEvent.event === 'transferFromContract' ? `contract_${from}` : from;
-  const finalTo = logEvent.event === 'transferToContract' || logEvent.event === 'issueToContract' ? `contract_${to}` : to;
+  const finalFrom = logEvent.event === 'transferFromContract' ? `contract_${from}` : (logEvent.event === 'stakeFromContract' ? `contract_${logEvent.contract}` : from);
+  const finalTo = logEvent.event === 'transferToContract' || logEvent.event === 'issueToContract' ? `contract_${to}` : (logEvent.event === 'stakeFromContract' ? logEvent.data.account : to);
 
   insertTx.from = finalFrom;
   insertTx.to = finalTo;
   insertTx.symbol = symbol;
   insertTx.quantity = quantity;
   insertTx.memo = null;
-  const { memo } = payloadObj;
-  if (memo && typeof memo === 'string') {
-    insertTx.memo = memo;
+  if (logEvent.event === 'stake' || logEvent.event === 'stakeFromContract') {
+    insertTx.operation = insertTx.operation + '_stake';
+  }
+  if (payloadObj && payloadObj.memo && typeof payloadObj && payloadObj.memo === 'string') {
+    insertTx.memo = payloadObj.memo;
   }
 
   await insertHistoryForAccounts(collection, insertTx, [finalFrom, finalTo]);

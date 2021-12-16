@@ -1,7 +1,7 @@
 /* eslint-disable */
 const { MongoClient } = require('mongodb');
 require('dotenv').config();
-
+const { createCollections, parseBlock } = require('../history_builder');
 
 let client;
 let db;
@@ -16,7 +16,9 @@ async function setupDB() {
     useNewUrlParser: true,
     useUnifiedTopology: true
   });
-  db = await client.db(process.env.DATABASE_NAME);
+  db = await client.db(process.env.DATABASE_NAME + '_test');
+  await db.dropDatabase();
+  await createCollections(db);
   accountsHistory = await db.collection('accountsHistory');
   nftHistory = await db.collection('nftHistory');
   marketHistory = await db.collection('marketHistory');
@@ -31,6 +33,11 @@ async function findTransaction(transactionId) {
     .toArray();
 }
 
+async function runParseBlock(block) {
+  await parseBlock(block, accountsHistory, nftHistory, marketHistory);
+}
+
 module.exports.setupDB = setupDB;
 module.exports.destroyDB = destroyDB;
 module.exports.findTransaction = findTransaction;
+module.exports.runParseBlock = runParseBlock;
