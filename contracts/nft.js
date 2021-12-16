@@ -34,15 +34,19 @@ async function parseTransferNftOperation(collection, nftCollection, tx, logEvent
   insertTx.symbol = symbol;
   insertTx.nft = id;
 
-  await insertHistoryForAccount(collection, insertTx, finalFrom);
-  await insertHistoryForNft(nftCollection, id, insertTx);
+  if (finalFrom && !finalFrom.startsWith('contract_')) {
+    await insertHistoryForAccount(collection, insertTx, finalFrom);
+    await insertHistoryForNft(nftCollection, id, insertTx);
+  }
 
   // quick fix until account history is restructured to two separate collections that only
   // reference the collection by id similary as for the nftHistory
   insertTx.account = finalTo;
-  await insertHistoryForNft(nftCollection, id, insertTx);
-  if (finalFrom !== finalTo) {
-    await insertHistoryForAccount(collection, insertTx, finalTo);
+  if (finalTo && !finalTo.startsWith('contract_')) {
+    await insertHistoryForNft(nftCollection, id, insertTx);
+    if (finalFrom !== finalTo) {
+      await insertHistoryForAccount(collection, insertTx, finalTo);
+    }
   }
 }
 

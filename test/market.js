@@ -162,7 +162,7 @@ describe('market', function () {
       const txId = '29da2c6b1bb616ed06bf4c0609fd2a31e74206d1';
       const block = await findTransaction(txId);
 
-      assert.strictEqual(block.length, 6);
+      assert.strictEqual(block.length, 5);
 
       const remainingTx = block[3];
 
@@ -177,7 +177,7 @@ describe('market', function () {
       assert.strictEqual(remainingTx.to, 'balte');
       assert.strictEqual(remainingTx.quantity, '0.00000001');
       assert.strictEqual(remainingTx.memo, null);
-      assert.strictEqual(remainingTx.account, 'contract_market');
+      assert.strictEqual(remainingTx.account, 'balte');
 
   });
 

@@ -45,7 +45,7 @@ describe('tokens', function () {
       assert.strictEqual(tx.symbol, 'SGTK');
       assert.strictEqual(tx.quantity, '10000');
       assert.strictEqual(tx.memo, null);
-      assert.strictEqual(tx.account, 'contract_tokens');
+      assert.strictEqual(tx.account, 'someguy123');
 
   });
 

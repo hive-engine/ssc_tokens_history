@@ -22,8 +22,15 @@ async function parseTransferOperation(collection, tx, logEvent, payloadObj) {
     quantity,
   } = logEvent.data;
 
+  const accounts = [];
   const finalFrom = logEvent.event === 'transferFromContract' ? `contract_${from}` : (logEvent.event === 'stakeFromContract' ? `contract_${logEvent.contract}` : from);
+  if (finalFrom && !finalFrom.startsWith('contract_')) {
+      accounts.push(finalFrom);
+  }
   const finalTo = logEvent.event === 'transferToContract' || logEvent.event === 'issueToContract' ? `contract_${to}` : (logEvent.event === 'stakeFromContract' ? logEvent.data.account : to);
+  if (finalTo && !finalTo.startsWith('contract_')) {
+      accounts.push(finalTo);
+  }
 
   insertTx.from = finalFrom;
   insertTx.to = finalTo;
@@ -37,7 +44,7 @@ async function parseTransferOperation(collection, tx, logEvent, payloadObj) {
     insertTx.memo = payloadObj.memo;
   }
 
-  await insertHistoryForAccounts(collection, insertTx, [finalFrom, finalTo]);
+  await insertHistoryForAccounts(collection, insertTx, accounts);
 }
 
 async function parseTransferFeeOperation(collection, contract, action, tx, event, payloadObj) {
