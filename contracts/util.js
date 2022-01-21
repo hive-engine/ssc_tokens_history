@@ -3,7 +3,6 @@
 
 const config = require('../config');
 
-
 async function insertHistoryForAccount(collection, tx, account) {
   const insertTx = tx;
   insertTx._id = null;

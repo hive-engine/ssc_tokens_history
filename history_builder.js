@@ -23,6 +23,8 @@ const { parseNftMarketContract } = require('./contracts/nftmarket');
 const { parseMarketPoolsContract } = require('./contracts/marketpools');
 const { parseBotControllerContract } = require('./contracts/botcontroller');
 const { parseCritterManagerContract } = require('./contracts/crittermanager');
+const { parseCommentsContract } = require('./contracts/comments');
+const { defaultParseEvents } = require('./contracts/default');
 
 
 const sscNodes = new Queue();
@@ -91,23 +93,27 @@ async function parseTx(tx, blockNumber, dateTimestamp, finalTimestamp, accountsH
   } else if (contract === Contracts.NFT) {
     await parseNftContract(accountsHistory, nftHistory, sender, contract, action, finalTx, events, payloadObj);
   } else if (contract === Contracts.WITNESSES) {
-    await parseWitnessesContract(accountsHistory, action, finalTx, events, payloadObj);
+    await parseWitnessesContract(accountsHistory, nftHistory, action, finalTx, events, payloadObj);
   } else if (contract === Contracts.HIVE_PEGGED) {
-    await parseHivePeggedContract(accountsHistory, action, finalTx, events, payloadObj);
+    await parseHivePeggedContract(accountsHistory, nftHistory, action, finalTx, events, payloadObj);
   } else if (contract === Contracts.NFT_MARKET) {
     await parseNftMarketContract(accountsHistory, nftHistory, sender, contract, action, finalTx, events, payloadObj);
   } else if (contract === Contracts.MINING) {
-    await parseMiningContract(accountsHistory, sender, contract, action, finalTx, events);
+    await parseMiningContract(accountsHistory, nftHistory, sender, contract, action, finalTx, events);
   } else if (contract === Contracts.BOT_CONTROLLER) {
-    await parseBotControllerContract(accountsHistory, sender, contract, action, finalTx, events, payloadObj);
+    await parseBotControllerContract(accountsHistory, nftHistory, sender, contract, action, finalTx, events, payloadObj);
   } else if (contract === Contracts.MARKET_POOLS) {
-    await parseMarketPoolsContract(accountsHistory, sender, contract, action, finalTx, events, payloadObj);
+    await parseMarketPoolsContract(accountsHistory, nftHistory, sender, contract, action, finalTx, events, payloadObj);
   } else if (contract === Contracts.INFLATION) {
     await parseInflationContract(accountsHistory, sender, contract, action, finalTx, events, payloadObj);
   } else if (contract === Contracts.CRITTER_MANAGER) {
     await parseCritterManagerContract(accountsHistory, sender, contract, action, finalTx, events, payloadObj);
+  } else if (contract === Contracts.COMMENTS) {
+    await parseCommentsContract(accountsHistory, sender, contract, action, finalTx, events, payloadObj);
   } else {
-    ; //console.log(`Contract ${contract} is not implemented yet.`);
+    // console.log(`Contract ${contract} is not implemented yet.`);
+    // Default parsing logic. New contracts should add extra metadata as in individual contracts above.
+    await defaultParseEvents(accountsHistory, nftHistory, finalTx, events, payloadObj);
   }
 }
 
@@ -152,55 +158,59 @@ async function parseSSCChain(blockNumber) {
   }
 }
 
+async function createCollections(db) {
+  console.log('creating collections');
+  const accountsHistoryColl = await db.createCollection('accountsHistory');
+  await accountsHistoryColl.createIndex({ account: 1, symbol: 1, operation: 1, timestamp: -1 });
+  await accountsHistoryColl.createIndex({ transactionId: 1 });
+  await accountsHistoryColl.createIndex({ timestamp: -1 });
+  const nftHistoryColl = await db.createCollection('nftHistory');
+  await nftHistoryColl.createIndex({ nftId: 1, account: 1, symbol: 1, timestamp: -1 });
+  await nftHistoryColl.createIndex({ account: 1, symbol: 1, timestamp: -1 });
+  await nftHistoryColl.createIndex({ timestamp: -1 });
+  const marketHistoryColl = await db.createCollection('marketHistory');
+  await marketHistoryColl.createIndex({ symbol: 1, timestamp: -1 });
+  await marketHistoryColl.createIndex({ timestamp: -1 });
+}
+
 const init = async () => {
   client = await MongoClient.connect(process.env.DATABASE_URL, { useNewUrlParser: true });
   db = client.db(process.env.DATABASE_NAME);
   db.collection('accountsHistory', { strict: true }, async (err, collection) => {
     // collection does not exist
     if (err) {
-      console.log('creating collections');
-      accountsHistoryColl = await db.createCollection('accountsHistory');
-      await accountsHistoryColl.createIndex({ account: 1, symbol: 1, operation: 1, timestamp: -1 });
-      await accountsHistoryColl.createIndex({ transactionId: 1 });
-      await accountsHistoryColl.createIndex({ timestamp: -1 });
-      nftHistoryColl = await db.createCollection('nftHistory');
-      await nftHistoryColl.createIndex({ nftId: 1, account: 1, symbol: 1, timestamp: -1 });
-      await nftHistoryColl.createIndex({ account: 1, symbol: 1, timestamp: -1 });
-      await nftHistoryColl.createIndex({ timestamp: -1 });
-      marketHistoryColl = await db.createCollection('marketHistory');
-      await marketHistoryColl.createIndex({ symbol: 1, timestamp: -1 });
-      await marketHistoryColl.createIndex({ timestamp: -1 });
-    } else {
-      accountsHistoryColl = collection;
-      nftHistoryColl = db.collection('nftHistory');
-      marketHistoryColl = db.collection('marketHistory');
+      await createCollections(db);
+    }
+      
+    accountsHistoryColl = db.collection('accountsHistory');
+    nftHistoryColl = db.collection('nftHistory');
+    marketHistoryColl = db.collection('marketHistory');
 
-      // rollback if txs of the @lastSSCBlockParsed block have already been written
-      console.log(`Starting rollback for block ${lastSSCBlockParsed}.`);
-      const block = await ssc.getBlockInfo(lastSSCBlockParsed);
-      if (block) {
-        const { timestamp } = block;
+    // rollback if txs of the @lastSSCBlockParsed block have already been written
+    console.log(`Starting rollback for block ${lastSSCBlockParsed}.`);
+    const block = await ssc.getBlockInfo(lastSSCBlockParsed);
+    if (block) {
+      const { timestamp } = block;
 
-        const blockDate = new Date(`${timestamp}.000Z`);
-        const finalTimestamp = blockDate.getTime() / 1000;
+      const blockDate = new Date(`${timestamp}.000Z`);
+      const finalTimestamp = blockDate.getTime() / 1000;
 
-        await accountsHistoryColl.deleteMany({
-          timestamp: {
-            $gte: finalTimestamp,
-          },
-        });
-        await nftHistoryColl.deleteMany({
-          timestamp: {
-            $gte: finalTimestamp,
-          },
-        });
-        await marketHistoryColl.deleteMany({
-          timestamp: {
-            $gte: finalTimestamp,
-          },
-        });
-        console.log(`Finished rollback with timestamp >= ${finalTimestamp}.`);
-      }
+      await accountsHistoryColl.deleteMany({
+        timestamp: {
+          $gte: finalTimestamp,
+        },
+      });
+      await nftHistoryColl.deleteMany({
+        timestamp: {
+          $gte: finalTimestamp,
+        },
+      });
+      await marketHistoryColl.deleteMany({
+        timestamp: {
+          $gte: finalTimestamp,
+        },
+      });
+      console.log(`Finished rollback with timestamp >= ${finalTimestamp}.`);
     }
 
     parseSSCChain(lastSSCBlockParsed);
@@ -219,3 +229,5 @@ const init = async () => {
 
 
 module.exports.init = init;
+module.exports.createCollections = createCollections;
+module.exports.parseBlock = parseBlock;

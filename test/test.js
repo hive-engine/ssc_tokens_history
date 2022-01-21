@@ -15,5 +15,7 @@ describe('test all contracts', function () {
   require('./hivepegged');
   require('./mining');
   require('./market');
+  require('./comments');
+  require('./nftauction');
 
 });

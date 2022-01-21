@@ -3,20 +3,22 @@
 const {
   parseTransferOperations,
 } = require('./tokens');
+const { defaultParseEvents } = require('./default');
 
 const { WitnessesContract } = require('../history_builder.constants');
 
 
-async function parseWitnessesContract(collection, action, tx, events, payloadObj) {
+async function parseWitnessesContract(accountsHistory, nftHistory, action, tx, events, payloadObj) {
   switch (action) {
     case WitnessesContract.PROPOSE_ROUND:
-      await parseTransferOperations(collection, tx, events, payloadObj);
+      await parseTransferOperations(accountsHistory, tx, events, payloadObj);
       break;
     case WitnessesContract.REGISTER:
     case WitnessesContract.APPROVE:
     case WitnessesContract.DISAPPROVE:
     case WitnessesContract.SCHEDULE_WITNESSES:
       // TODO implement actions
+      await defaultParseEvents(accountsHistory, nftHistory, tx, events, payloadObj);
       break;
     default:
       console.log(`Action ${action} is not implemented for 'witnesses' contract yet.`);
