@@ -40,7 +40,7 @@ async function parseTransferOperation(collection, tx, logEvent, payloadObj) {
   if (logEvent.event === 'stake' || logEvent.event === 'stakeFromContract') {
     insertTx.operation = insertTx.operation + '_stake';
   }
-  if (payloadObj && payloadObj.memo && typeof payloadObj && payloadObj.memo === 'string') {
+  if (payloadObj && payloadObj.memo && typeof payloadObj.memo === 'string') {
     insertTx.memo = payloadObj.memo;
   }
 
