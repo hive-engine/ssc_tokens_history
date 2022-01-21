@@ -6,7 +6,7 @@ const { findTransaction, runParseBlock } = require('./common');
 describe('tokens', function () {
 
   it('parse tokens_transfer', async () => {
-      await runParseBlock({"_id":151,"blockNumber":151,"refHiveBlockNumber":42106781,"refHiveBlockId":"02827f9de39cca41162da2512e4b75fdfb2e4cc6","prevRefHiveBlockId":"02827f9ce5e1b6de959cba5a50c08fad80401184","previousHash":"e8ac67f355e3fd637c242a58a2fa9b97db841d7b2cdd400f1dc77c3a31a53bd9","previousDatabaseHash":"3e70fbcbd43eeeadc9f15b6eeb85218fdea65300410e95f2cf82bc7aac6b1372","timestamp":"2020-03-30T15:43:54","transactions":[{"refHiveBlockNumber":42106781,"transactionId":"0caae5e807b2a3281ea57f0041bdbed48838d09e","sender":"hive-engine","contract":"tokens","action":"transfer","payload":"{\"symbol\":\"BEE\",\"to\":\"hive-tokens\",\"quantity\":\"1000\",\"memo\":\"\",\"isSignedWithActiveKey\":true}","executedCodeHash":"9f4e5ec54de1c9ca9365646184ee91d80260f795b6dada8a922ddca8ad4b3e10","hash":"cac542dbbb473f9ec35df853f77a873c49d59d631fcc18c7c41407528b9f0ba6","databaseHash":"ce8fe98307148a7b0748e85585e84d7654b847e92aafa10f9c4814ca1c9a83ba","logs":"{\"events\":[{\"contract\":\"tokens\",\"event\":\"transfer\",\"data\":{\"from\":\"hive-engine\",\"to\":\"hive-tokens\",\"symbol\":\"BEE\",\"quantity\":\"1000\"}}]}"}],"virtualTransactions":[],"hash":"5c41d65ebe164434bfd165fc4b794e8b4694ea826a8f7eddbb6f13bfc8f1efd6","databaseHash":"d86cf9a107e7af0d67f15c24a0442cf251a3d36dc969b8064030e6fc1671610f","merkleRoot":"33b535a674b2996364fd32de73ac5d638a51709e77f9ccbf7e08f270c5c0b946","round":null,"roundHash":"","witness":"","signingKey":"","roundSignature":""})
+      await runParseBlock({"_id":151,"blockNumber":151,"refHiveBlockNumber":42106781,"refHiveBlockId":"02827f9de39cca41162da2512e4b75fdfb2e4cc6","prevRefHiveBlockId":"02827f9ce5e1b6de959cba5a50c08fad80401184","previousHash":"e8ac67f355e3fd637c242a58a2fa9b97db841d7b2cdd400f1dc77c3a31a53bd9","previousDatabaseHash":"3e70fbcbd43eeeadc9f15b6eeb85218fdea65300410e95f2cf82bc7aac6b1372","timestamp":"2020-03-30T15:43:54","transactions":[{"refHiveBlockNumber":42106781,"transactionId":"0caae5e807b2a3281ea57f0041bdbed48838d09e","sender":"hive-engine","contract":"tokens","action":"transfer","payload":"{\"symbol\":\"BEE\",\"to\":\"hive-tokens\",\"quantity\":\"1000\",\"memo\":\"memo\",\"isSignedWithActiveKey\":true}","executedCodeHash":"9f4e5ec54de1c9ca9365646184ee91d80260f795b6dada8a922ddca8ad4b3e10","hash":"cac542dbbb473f9ec35df853f77a873c49d59d631fcc18c7c41407528b9f0ba6","databaseHash":"ce8fe98307148a7b0748e85585e84d7654b847e92aafa10f9c4814ca1c9a83ba","logs":"{\"events\":[{\"contract\":\"tokens\",\"event\":\"transfer\",\"data\":{\"from\":\"hive-engine\",\"to\":\"hive-tokens\",\"symbol\":\"BEE\",\"quantity\":\"1000\"}}]}"}],"virtualTransactions":[],"hash":"5c41d65ebe164434bfd165fc4b794e8b4694ea826a8f7eddbb6f13bfc8f1efd6","databaseHash":"d86cf9a107e7af0d67f15c24a0442cf251a3d36dc969b8064030e6fc1671610f","merkleRoot":"33b535a674b2996364fd32de73ac5d638a51709e77f9ccbf7e08f270c5c0b946","round":null,"roundHash":"","witness":"","signingKey":"","roundSignature":""})
       const txId = '0caae5e807b2a3281ea57f0041bdbed48838d09e';
       const block = await findTransaction(txId);
       const tx = block[0];
@@ -22,7 +22,7 @@ describe('tokens', function () {
       assert.strictEqual(tx.to, 'hive-tokens');
       assert.strictEqual(tx.symbol, 'BEE');
       assert.strictEqual(tx.quantity, '1000');
-      assert.strictEqual(tx.memo, null);
+      assert.strictEqual(tx.memo, 'memo');
       assert.strictEqual(tx.account, 'hive-engine');
 
   });
