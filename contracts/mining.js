@@ -30,7 +30,7 @@ async function parseLotteryOperation(collection, sender, contract, action, tx, e
 }
 
 
-async function parseMiningContract(accountsHistory, nftHistory, sender, contract, action, tx, events) {
+async function parseMiningContract(accountsHistory, nftHistory, sender, contract, action, tx, events, payloadObj) {
   switch (action) {
     case MiningContract.CHECK_PENDING_LOTTERIES:
       await parseLotteryOperation(accountsHistory, sender, contract, action, tx, events);

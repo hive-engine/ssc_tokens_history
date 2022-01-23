@@ -99,7 +99,7 @@ async function parseTx(tx, blockNumber, dateTimestamp, finalTimestamp, accountsH
   } else if (contract === Contracts.NFT_MARKET) {
     await parseNftMarketContract(accountsHistory, nftHistory, sender, contract, action, finalTx, events, payloadObj);
   } else if (contract === Contracts.MINING) {
-    await parseMiningContract(accountsHistory, nftHistory, sender, contract, action, finalTx, events);
+    await parseMiningContract(accountsHistory, nftHistory, sender, contract, action, finalTx, events, payloadObj);
   } else if (contract === Contracts.BOT_CONTROLLER) {
     await parseBotControllerContract(accountsHistory, nftHistory, sender, contract, action, finalTx, events, payloadObj);
   } else if (contract === Contracts.MARKET_POOLS) {
