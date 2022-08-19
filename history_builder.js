@@ -41,11 +41,13 @@ const getSSCNode = () => {
 let ssc = new SSC(getSSCNode());
 let client = null;
 let db = null;
+let dbHsc = null;
+let chain = null;
 let accountsHistoryColl = null;
 let nftHistoryColl = null;
 let marketHistoryColl = null;
 
-let { lastSSCBlockParsed } = config; // eslint-disable-line prefer-const
+let { lastSSCBlockParsed, parseFromMongo, databaseNameHsc } = config; // eslint-disable-line prefer-const
 
 function ignoreContract(contract) {
   if (config && config.ignoreContracts && config.ignoreContracts instanceof Array) {
@@ -82,7 +84,7 @@ async function parseTx(tx, blockNumber, dateTimestamp, finalTimestamp, accountsH
   const payloadObj = payload ? JSON.parse(payload) : null; // payload is null for virtual txs
   const { events, errors } = logsObj;
 
-  if (errors !== undefined) {
+  if (errors !== undefined && (!events || events.length === 0)) {
     // an error occurred -> no need to process the transaction
   } else if (ignoreContract(contract)) {
     // ignore the given contract
@@ -139,9 +141,28 @@ async function parseBlock(block, accountsHistory, nftHistory, marketHistory) {
   }
 }
 
+async function getBlockInfo(blockNumber) {
+  try {
+    const block = typeof blockNumber === 'number' && Number.isInteger(blockNumber)
+      ? await chain.findOne({ _id: blockNumber })
+      : null;
+
+    return block;
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(error);
+    return null;
+  }
+}
+
 async function parseSSCChain(blockNumber) {
   try {
-    const block = await ssc.getBlockInfo(blockNumber);
+    let block;
+    if (parseFromMongo) {
+      block = await getBlockInfo(blockNumber);
+    } else {
+      block = await ssc.getBlockInfo(blockNumber);
+    }
 
     if (block !== null) {
       await parseBlock(block, accountsHistoryColl, nftHistoryColl, marketHistoryColl);
@@ -175,13 +196,18 @@ async function createCollections(db) {
 
 const init = async () => {
   client = await MongoClient.connect(process.env.DATABASE_URL, { useNewUrlParser: true });
+  if (parseFromMongo) {
+    dbHsc = client.db(databaseNameHsc);
+    chain = dbHsc.collection('chain');
+  }
+
   db = client.db(process.env.DATABASE_NAME);
   db.collection('accountsHistory', { strict: true }, async (err, collection) => {
     // collection does not exist
     if (err) {
       await createCollections(db);
     }
-      
+
     accountsHistoryColl = db.collection('accountsHistory');
     nftHistoryColl = db.collection('nftHistory');
     marketHistoryColl = db.collection('marketHistory');
