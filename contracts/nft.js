@@ -137,6 +137,9 @@ async function parsePayloadNftOperation(collection, nftCollection, sender, contr
 }
 
 async function parseNftUpdatePropertyDefinition(collection, sender, tx, events) {
+  if (!events || events.length === 0) {
+    return;
+  }
   const txNft = {
     ...tx,
   };
