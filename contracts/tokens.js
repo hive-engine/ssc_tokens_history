@@ -11,7 +11,7 @@ const {
 } = require('../history_builder.constants');
 
 
-async function parseTransferOperation(collection, tx, logEvent, payloadObj) {
+async function parseTransferOperation(collection, tx, logEvent, payloadObj, sender) {
   const insertTx = {
       ...tx
   };
@@ -43,6 +43,10 @@ async function parseTransferOperation(collection, tx, logEvent, payloadObj) {
   if (payloadObj && payloadObj.memo && typeof payloadObj.memo === 'string') {
     insertTx.memo = payloadObj.memo;
   }
+  if (insertTx.operation === 'tokens_issue') {
+    accounts.push(sender);
+    insertTx.issuer = sender;
+  }
 
   await insertHistoryForAccounts(collection, insertTx, accounts);
 }
@@ -63,13 +67,13 @@ async function parseTransferFeeOperations(collection, contract, action, tx, even
   });
 }
 
-async function parseTransferOperations(collection, tx, events, payloadObj) {
+async function parseTransferOperations(collection, tx, events, payloadObj, sender) {
   await parseEvents(events, async (event) => {
     if (event.contract === Contracts.TOKENS) {
       const insertTx = {
         ...tx,
       };
-      await parseTransferOperation(collection, insertTx, event, payloadObj);
+      await parseTransferOperation(collection, insertTx, event, payloadObj, sender);
     }
   });
 }
@@ -175,7 +179,7 @@ async function parseTokensContract(collection, sender, contract, action, tx, eve
     case TokensContract.TRANSFER_FROM_CONTRACT:
     case TokensContract.TRANSFER_TO_CONTRACT:
     case TokensContract.ISSUE:
-      await parseTransferOperations(collection, tx, events, payloadObj);
+      await parseTransferOperations(collection, tx, events, payloadObj, sender);
       break;
     case TokensContract.UPDATE_PRECISION:
     case TokensContract.UPDATE_URL:
