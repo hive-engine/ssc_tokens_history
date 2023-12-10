@@ -1,6 +1,3 @@
-
-
-
 const Contracts = {
   AIRDROPS: 'airdrops',
   BOT_CONTROLLER: 'botcontroller',
