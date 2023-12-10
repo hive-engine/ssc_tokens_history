@@ -4,7 +4,7 @@ const nodeCleanup = require('node-cleanup');
 require('dotenv').config();
 const { MongoClient } = require('mongodb');
 const fs = require('fs-extra');
-const SSC = require('sscjs');
+const ssc = require('./ssc.js');
 const { Queue } = require('./libs/Queue');
 const config = require('./config');
 
@@ -30,15 +30,6 @@ const { defaultParseEvents } = require('./contracts/default');
 const sscNodes = new Queue();
 config.nodes.forEach(node => sscNodes.push(node));
 
-const getSSCNode = () => {
-  const node = sscNodes.pop();
-  sscNodes.push(node);
-
-  console.log('Using SSC node:', node); // eslint-disable-line no-console
-  return node;
-};
-
-let ssc = new SSC(getSSCNode());
 let client = null;
 let db = null;
 let dbHsc = null;
@@ -174,7 +165,6 @@ async function parseSSCChain(blockNumber) {
     }
   } catch (error) {
     console.log(error);
-    ssc = new SSC(getSSCNode());
     setTimeout(() => parseSSCChain(blockNumber), config.pollingTime);
   }
 }

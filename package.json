@@ -19,9 +19,7 @@
     "express": "^4.16.4",
     "fs-extra": "^7.0.1",
     "mongodb": "^3.3.0",
-    "node-cleanup": "^2.1.2",
-    "pg": "^7.7.1",
-    "sscjs": "0.0.5"
+    "node-cleanup": "^2.1.2"
   },
   "devDependencies": {
     "eslint": "^5.9.0",
