@@ -8,5 +8,10 @@
     "ignoreContracts": [],
     "ignoreSymbols": [],
     "parseFromMongo": false,
-    "databaseNameHsc": "hsc"
+    "databaseNameHsc": "hsc",
+    "serverOptions": {
+        "maxLimit": 1000,
+        "maxOffset": 300000,
+        "logRequests": true
+    }
 }
