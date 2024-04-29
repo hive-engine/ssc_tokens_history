@@ -64,7 +64,7 @@ async function parseNftChangePrice(collection, nftCollection, sender, contract, 
 }
 
 async function parseNftBuy(collection, nftCollection, sender, contract, action, tx, events, payloadObj) {
-  if (events && events.length > 0) {
+  if (events && events.length > 1) {
     const insertTx = {
       ...tx,
     };
