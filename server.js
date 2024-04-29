@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { MongoClient } = require('mongodb');
+const { MongoClient, ObjectId } = require('mongodb');
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -34,6 +34,7 @@ historyRouter.get('/', async (req, res) => {
       symbol,
       timestampStart,
       timestampEnd,
+      afterID,
     } = query;
 
     console.log(`[${pid}] got request: ${JSON.stringify(query)} with IP ${ip}`);
@@ -84,8 +85,12 @@ historyRouter.get('/', async (req, res) => {
         };
       }
 
+      if (afterID) {
+        mongoQuery._id = { $lt: ObjectId(afterID) };
+      }
+
       const result = await accountsHistoryColl.find(mongoQuery, {
-        sort: { timestamp: -1 },
+        sort: { timestamp: -1, _id: -1 },
         skip: sOffset,
         limit: sLimit,
       }).toArray();
@@ -116,6 +121,7 @@ nftHistoryRouter.get('/', async (req, res) => {
       limit,
       timestampStart,
       timestampEnd,
+      afterID,
     } = query;
 
     console.log(`[${pid}] got nft request: ${JSON.stringify(query)} with IP ${ip}`);
@@ -175,6 +181,10 @@ nftHistoryRouter.get('/', async (req, res) => {
         };
       }
 
+      if (afterID) {
+        matchQuery._id = { $lt: ObjectId(afterID) };
+      }
+
       const mongoQuery = [
         {
           $match: matchQuery,
@@ -201,7 +211,7 @@ nftHistoryRouter.get('/', async (req, res) => {
             fromItems: 0,
           },
         },
-        { $sort: { timestamp: -1 } },
+        { $sort: { timestamp: -1, _id: -1 } },
         { $skip: sOffset },
         { $limit: sLimit },
       ];
@@ -232,6 +242,7 @@ marketRouter.get('/', async (req, res) => {
       symbol,
       timestampStart,
       timestampEnd,
+      afterID,
     } = query;
 
     console.log(`[${pid}] got market request: ${JSON.stringify(query)} with IP ${ip}`);
@@ -255,8 +266,12 @@ marketRouter.get('/', async (req, res) => {
         };
       }
 
+      if (afterID) {
+        mongoQuery._id = { $lt: ObjectId(afterID) };
+      }
+
       const result = await marketHistoryColl.find(mongoQuery, {
-        sort: { timestamp: -1 },
+        sort: { timestamp: -1, _id: -1 },
         limit: 500,
       }).toArray();
 
