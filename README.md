@@ -20,6 +20,26 @@ You may also define token or nft symbols that should be ignored:
 
 which may be any of the available token or nft symbols.
 
+The config also allows you to configure some options for the servers.
+
+```
+serverOptions.maxLimit : 1000
+```
+
+`maxLimit` is the maximum limit that a request can have, and the default used when a limit is not present in the request.
+
+```
+serverOptions.maxOffset : 10000
+```
+
+`maxLimit` is the maximum offset that a request can have.
+
+```
+serverOptions.logRequests : true
+```
+
+if `logRequests` is set to true, then all incoming requests will be logged.
+
 ## Running the parser
 
 To run the parser for parsing the hsc run:
