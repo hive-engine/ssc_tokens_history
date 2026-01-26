@@ -6,7 +6,7 @@
   "scripts": {
     "start-parser": "node parser.js",
     "start-server": "node server.js",
-    "test-all": "./node_modules/mocha/bin/mocha  ./test/test.js"
+    "test-all": "mocha ./test/test.js"
   },
   "keywords": [],
   "author": "",
@@ -20,15 +20,18 @@
     "fs-extra": "^7.0.1",
     "mongodb": "^3.3.0",
     "node-cleanup": "^2.1.2",
-    "pg": "^7.7.1",
-    "sscjs": "0.0.5"
+    "sscjs": "^0.0.9"
   },
   "devDependencies": {
-    "eslint": "^5.9.0",
-    "eslint-config-airbnb": "^17.1.0",
+    "eslint": "^9.39.2",
+    "eslint-config-airbnb": "^19.0.4",
     "eslint-plugin-import": "^2.14.0",
     "eslint-plugin-jsx-a11y": "^6.1.2",
     "eslint-plugin-react": "^7.11.1",
-    "mocha": "^8.3.2"
+    "mocha": "^11.7.5"
+  },
+  "overrides": {
+    "axios": "^1.7.9",
+    "diff": "^8.0.3"
   }
 }
