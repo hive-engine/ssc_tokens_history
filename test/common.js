@@ -12,10 +12,7 @@ let marketHistory;
 
 
 async function setupDB() {
-  client = await MongoClient.connect(process.env.DATABASE_URL, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-  });
+  client = await MongoClient.connect(process.env.DATABASE_URL);
   db = await client.db(process.env.DATABASE_NAME + '_test');
   await db.dropDatabase();
   await createCollections(db);
@@ -29,7 +26,7 @@ async function destroyDB() {
 }
 
 async function findTransaction(transactionId) {
-  return accountsHistory.find({ transactionId: transactionId }).sort({_id: 1})
+  return accountsHistory.find({ transactionId: transactionId }).sort({ _id: 1 })
     .toArray();
 }
 

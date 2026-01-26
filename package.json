@@ -18,7 +18,7 @@
     "dotenv": "^6.2.0",
     "express": "^4.16.4",
     "fs-extra": "^7.0.1",
-    "mongodb": "^3.3.0",
+    "mongodb": "^4.17.2",
     "node-cleanup": "^2.1.2",
     "sscjs": "^0.0.9"
   },
