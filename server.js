@@ -275,26 +275,26 @@ marketRouter.get('/', async (req, res) => {
 });
 
 const init = async () => {
-  client = await MongoClient.connect(process.env.DATABASE_URL, { useNewUrlParser: true });
+  client = await MongoClient.connect(process.env.DATABASE_URL);
   db = client.db(process.env.DATABASE_NAME);
-  db.collection('accountsHistory', { strict: true }, async (err, collection) => {
-    // collection does not exist
-    if (err) {
-      throw new Error('launch history_builder.js first');
-    } else {
-      accountsHistoryColl = collection;
-      nftHistoryColl = db.collection('nftHistory');
-      marketHistoryColl = db.collection('marketHistory');
-      app.use('/accountHistory', historyRouter);
-      app.use('/nftHistory', nftHistoryRouter);
-      app.use('/marketHistory', marketRouter);
+  db = client.db(process.env.DATABASE_NAME);
 
-      app.set('trust proxy', true);
-      app.set('trust proxy', 'loopback');
+  const collections = await db.listCollections({ name: 'accountsHistory' }).toArray();
+  if (collections.length === 0) {
+    throw new Error('launch history_builder.js first');
+  } else {
+    accountsHistoryColl = db.collection('accountsHistory');
+    nftHistoryColl = db.collection('nftHistory');
+    marketHistoryColl = db.collection('marketHistory');
+    app.use('/accountHistory', historyRouter);
+    app.use('/nftHistory', nftHistoryRouter);
+    app.use('/marketHistory', marketRouter);
 
-      app.listen(config.port);
-    }
-  });
+    app.set('trust proxy', true);
+    app.set('trust proxy', 'loopback');
+
+    app.listen(config.port);
+  }
 };
 
 console.log(`[${pid}] starting up...`);

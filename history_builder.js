@@ -197,52 +197,52 @@ async function createCollections(db) {
 }
 
 const init = async () => {
-  client = await MongoClient.connect(process.env.DATABASE_URL, { useNewUrlParser: true });
+  client = await MongoClient.connect(process.env.DATABASE_URL);
   if (parseFromMongo) {
     dbHsc = client.db(databaseNameHsc);
     chain = dbHsc.collection('chain');
   }
 
   db = client.db(process.env.DATABASE_NAME);
-  db.collection('accountsHistory', { strict: true }, async (err, collection) => {
-    // collection does not exist
-    if (err) {
-      await createCollections(db);
-    }
+  db = client.db(process.env.DATABASE_NAME);
 
-    accountsHistoryColl = db.collection('accountsHistory');
-    nftHistoryColl = db.collection('nftHistory');
-    marketHistoryColl = db.collection('marketHistory');
+  const collections = await db.listCollections({ name: 'accountsHistory' }).toArray();
+  if (collections.length === 0) {
+    await createCollections(db);
+  }
 
-    // rollback if txs of the @lastSSCBlockParsed block have already been written
-    console.log(`Starting rollback for block ${lastSSCBlockParsed}.`);
-    const block = await ssc.getBlockInfo(lastSSCBlockParsed);
-    if (block) {
-      const { timestamp } = block;
+  accountsHistoryColl = db.collection('accountsHistory');
+  nftHistoryColl = db.collection('nftHistory');
+  marketHistoryColl = db.collection('marketHistory');
 
-      const blockDate = new Date(`${timestamp}.000Z`);
-      const finalTimestamp = blockDate.getTime() / 1000;
+  // rollback if txs of the @lastSSCBlockParsed block have already been written
+  console.log(`Starting rollback for block ${lastSSCBlockParsed}.`);
+  const block = await ssc.getBlockInfo(lastSSCBlockParsed);
+  if (block) {
+    const { timestamp } = block;
 
-      await accountsHistoryColl.deleteMany({
-        timestamp: {
-          $gte: finalTimestamp,
-        },
-      });
-      await nftHistoryColl.deleteMany({
-        timestamp: {
-          $gte: finalTimestamp,
-        },
-      });
-      await marketHistoryColl.deleteMany({
-        timestamp: {
-          $gte: finalTimestamp,
-        },
-      });
-      console.log(`Finished rollback with timestamp >= ${finalTimestamp}.`);
-    }
+    const blockDate = new Date(`${timestamp}.000Z`);
+    const finalTimestamp = blockDate.getTime() / 1000;
 
-    parseSSCChain(lastSSCBlockParsed);
-  });
+    await accountsHistoryColl.deleteMany({
+      timestamp: {
+        $gte: finalTimestamp,
+      },
+    });
+    await nftHistoryColl.deleteMany({
+      timestamp: {
+        $gte: finalTimestamp,
+      },
+    });
+    await marketHistoryColl.deleteMany({
+      timestamp: {
+        $gte: finalTimestamp,
+      },
+    });
+    console.log(`Finished rollback with timestamp >= ${finalTimestamp}.`);
+  }
+
+  parseSSCChain(lastSSCBlockParsed);
 
   // graceful app closing
   nodeCleanup((exitCode, signal) => { // eslint-disable-line no-unused-vars
